@@ -165,7 +165,7 @@ export default function HomePage() {
         {/* HERO */}
         <section className="bmzHeroBlock" aria-label="Главный экран">
           <div className="bmzHeroInner">
-            <div>
+            
               <h1 className="bmzHeroH1">
                 Автомобильные и железнодорожные весы под ключ по всему Казахстану
               </h1>
@@ -179,7 +179,7 @@ export default function HomePage() {
                 <button type="button" className="bmzBtnGhost" onClick={() => navigate('/products')}>
                   Смотреть продукцию
                 </button>
-              </div>
+              
             </div>
 
 
