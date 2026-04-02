@@ -1478,8 +1478,13 @@
     flex-direction: column;
     justify-content: center;
     gap: clamp(16px, 3.2vw, 30px);
-    align-items: center;
     min-height: 80vh;
+  }
+  .bmzHeroH1{
+    max-width: 70%;
+  }
+  .bmzHeroSub{
+    max-width: 70%;
   }
   .bmzStatsRow {
     grid-template-columns: repeat(2, 1fr);
