@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { Link } from 'react-router-dom'
 
 function MenuIcon() {
   return (
@@ -36,6 +37,7 @@ export default function BmzTopNav({
       key: l.key ?? l.label,
       label: l.label,
       onClick: l.onClick,
+      to: l.to,
       tone: l.tone ?? 'default',
     }))
   }, [links])
@@ -87,19 +89,33 @@ export default function BmzTopNav({
                 </button>
               </div>
               <nav className="bmzMobileDrawerNav" aria-label="Разделы">
-                {preparedLinks.map((l) => (
-                  <button
-                    key={l.key}
-                    type="button"
-                    className="bmzMobileLinkBtn"
-                    onClick={() => {
-                      setOpen(false)
-                      l.onClick?.()
-                    }}
-                  >
-                    {l.label}
-                  </button>
-                ))}
+                {preparedLinks.map((l) =>
+                  l.to ? (
+                    <Link
+                      key={l.key}
+                      to={l.to}
+                      className="bmzMobileLinkBtn"
+                      onClick={() => {
+                        setOpen(false)
+                        l.onClick?.()
+                      }}
+                    >
+                      {l.label}
+                    </Link>
+                  ) : (
+                    <button
+                      key={l.key}
+                      type="button"
+                      className="bmzMobileLinkBtn"
+                      onClick={() => {
+                        setOpen(false)
+                        l.onClick?.()
+                      }}
+                    >
+                      {l.label}
+                    </button>
+                  ),
+                )}
               </nav>
             </aside>
           </div>,
@@ -115,16 +131,22 @@ export default function BmzTopNav({
         </button>
 
         <nav className="bmzNavLinks" aria-label="Основная навигация">
-          {preparedLinks.map((l) => (
-            <button
-              key={l.key}
-              type="button"
-              className="bmzNavLinkBtn"
-              onClick={() => l.onClick?.()}
-            >
-              {l.label}
-            </button>
-          ))}
+          {preparedLinks.map((l) =>
+            l.to ? (
+              <Link key={l.key} to={l.to} className="bmzNavLinkBtn" onClick={() => l.onClick?.()}>
+                {l.label}
+              </Link>
+            ) : (
+              <button
+                key={l.key}
+                type="button"
+                className="bmzNavLinkBtn"
+                onClick={() => l.onClick?.()}
+              >
+                {l.label}
+              </button>
+            ),
+          )}
         </nav>
 
         <button type="button" className="bmzNavCTA" onClick={onCta}>

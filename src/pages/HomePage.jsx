@@ -1,6 +1,37 @@
-import { useEffect, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
-import { API_BASE_URL } from '../api/config'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { apiFetch } from '../api/client'
+import { API_BASE_URL, buildWhatsAppKpUrl } from '../api/config'
+import { useWhatsappDigits } from '../hooks/useWhatsappDigits'
+import HomeHit from '../components/HomeEditHit'
+import { HomeEditProvider } from '../context/HomeEditContext'
+import { useToast } from '../context/ToastContext'
+import { HOME_DEFAULTS } from '../data/homeDefaults'
+import { useHomeContent } from '../hooks/useHomeContent'
+import { filterFixedCategories } from '../utils/catalogCategoryOrder'
+
+function MultilineText({ text }) {
+  if (!text) return null
+  return (
+    <>
+      {String(text)
+        .split('\n')
+        .map((line, i) => (
+          <span key={i}>
+            {i > 0 ? <br /> : null}
+            {line}
+          </span>
+        ))}
+    </>
+  )
+}
+
+function normPills(item) {
+  if (!item?.pills) return []
+  return item.pills.map((p) =>
+    Array.isArray(p) ? { text: p[0], tone: p[1] || 'blue' } : { text: p.text || '', tone: p.tone || 'blue' },
+  )
+}
 
 const scrollToId = (id) => {
   const el = document.getElementById(id)
@@ -11,6 +42,7 @@ const scrollToId = (id) => {
 const fallbackCategoryCards = [
   {
     key: 'car',
+    slug: 'avtomobilnye-vesy',
     tone: 'blue',
     icon: 'АВ',
     badge: '5 категорий',
@@ -22,10 +54,11 @@ const fallbackCategoryCards = [
       ['Промышленные / сельхоз', 'blue'],
       ['Усиленные (карьеры)', 'orange'],
     ],
-    btn: 'Подробнее',
+    btn: 'Открыть',
   },
   {
     key: 'rail',
+    slug: 'zheleznodorozhnye-vesy',
     tone: 'blue',
     icon: 'ЖД',
     badge: 'под заказ',
@@ -36,10 +69,11 @@ const fallbackCategoryCards = [
       ['Вагонные платформы', 'blue'],
       ['Нагрузка до 150 т', 'blue'],
     ],
-    btn: 'Уточнить',
+    btn: 'Открыть',
   },
   {
     key: 'foundation',
+    slug: 'fundament',
     tone: 'blue',
     icon: 'ФУН',
     badge: 'фундамент',
@@ -51,10 +85,11 @@ const fallbackCategoryCards = [
       ['Сплошной с пандусами', 'blue'],
       ['Приямочного типа', 'blue'],
     ],
-    btn: 'Рассчитать',
+    btn: 'Открыть',
   },
   {
     key: 'automation',
+    slug: 'avtomatizatsiya',
     tone: 'blue',
     icon: 'ПО',
     badge: 'автоматизация',
@@ -67,10 +102,11 @@ const fallbackCategoryCards = [
       ['Telegram / Email', 'blue'],
       ['Синхронизация с 1С', 'blue'],
     ],
-    btn: 'Обсудить',
+    btn: 'Открыть',
   },
   {
     key: 'equipment',
+    slug: 'oborudovanie',
     tone: 'green',
     icon: 'ОБ',
     badge: 'комплект',
@@ -83,10 +119,11 @@ const fallbackCategoryCards = [
       ['Крановые и платформенные весы', 'blue'],
       ['Весы для животных', 'blue'],
     ],
-    btn: 'Подобрать',
+    btn: 'Открыть',
   },
   {
     key: 'services',
+    slug: 'uslugi',
     tone: 'orange',
     icon: 'УСЛ',
     badge: 'сервис',
@@ -99,13 +136,26 @@ const fallbackCategoryCards = [
       ['Модернизация весов', 'green'],
       ['Сервисное обслуживание', 'green'],
     ],
-    btn: 'Получить КП',
+    btn: 'Открыть',
   },
 ]
 
-export default function HomePage() {
+const PORTFOLIO_IMAGE_FALLBACK = [
+  '/images/Chuchinsk.jpg',
+  '/images/karaganda.JPG',
+  '/images/konaev.JPG',
+  '/images/makinsk.JPG',
+]
+
+export default function HomePage({ homeEditMode = false }) {
   const navigate = useNavigate()
   const location = useLocation()
+  const { digits: waDigits } = useWhatsappDigits()
+  const { content: publicContent } = useHomeContent()
+  const { pushToast } = useToast()
+
+  const [editDraft, setEditDraft] = useState(null)
+  const [editLoaded, setEditLoaded] = useState(false)
 
   const [form, setForm] = useState({
     type: 'Автомобильные весы',
@@ -114,6 +164,67 @@ export default function HomePage() {
   })
   const [formStatus, setFormStatus] = useState('idle') // 'idle' | 'sent'
   const [categoryCards, setCategoryCards] = useState(fallbackCategoryCards)
+
+  useEffect(() => {
+    if (!homeEditMode) return
+    let ok = true
+    apiFetch('/api/admin/home-content')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!ok) return
+        if (d && typeof d === 'object') setEditDraft(d)
+        else setEditDraft(structuredClone(HOME_DEFAULTS))
+      })
+      .catch(() => {
+        if (ok) setEditDraft(structuredClone(HOME_DEFAULTS))
+      })
+      .finally(() => {
+        if (ok) setEditLoaded(true)
+      })
+    return () => {
+      ok = false
+    }
+  }, [homeEditMode])
+
+  const content = homeEditMode ? (editDraft ?? HOME_DEFAULTS) : publicContent
+
+  const portfolioItems = useMemo(() => {
+    const items = content?.portfolio?.items || []
+    return items.map((it, i) => ({
+      ...it,
+      image: it?.image || PORTFOLIO_IMAGE_FALLBACK[i] || '',
+    }))
+  }, [content?.portfolio?.items])
+
+  const openBottomWhatsApp = useCallback(() => {
+    const text = 'Здравствуйте! Хочу получить консультацию по весам.'
+    const url = buildWhatsAppKpUrl(text, waDigits)
+    if (url) window.open(url, '_blank', 'noopener,noreferrer')
+    else scrollToId('home-lead')
+  }, [waDigits])
+
+  const saveHomeToServer = useCallback(async () => {
+    if (!homeEditMode || !editLoaded) {
+      pushToast({ type: 'error', text: 'Подождите загрузки контента' })
+      return
+    }
+    const payload = editDraft ?? HOME_DEFAULTS
+    try {
+      const res = await apiFetch('/api/admin/home-content', {
+        method: 'PUT',
+        body: JSON.stringify(payload),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        pushToast({ type: 'error', text: data.message || 'Не удалось сохранить' })
+        return
+      }
+      setEditDraft(data)
+      pushToast({ type: 'ok', text: 'Главная страница сохранена' })
+    } catch {
+      pushToast({ type: 'error', text: 'Сервер недоступен' })
+    }
+  }, [homeEditMode, editLoaded, editDraft, pushToast])
 
   useEffect(() => {
     const target = location.state?.scrollTo
@@ -136,11 +247,13 @@ export default function HomePage() {
         const items = await response.json()
         if (!Array.isArray(items) || items.length === 0) return
 
-        const mapped = items.slice(0, 6).map((item, idx) => {
+        const sorted = filterFixedCategories(items)
+        const mapped = sorted.slice(0, 6).map((item, idx) => {
           const fallback = fallbackCategoryCards[idx] || fallbackCategoryCards[0]
           return {
             ...fallback,
             key: item.slug || fallback.key,
+            slug: item.slug || fallback.slug,
             title: item.name || fallback.title,
             desc: item.description || fallback.desc,
             image: item.image || fallback.image,
@@ -159,59 +272,51 @@ export default function HomePage() {
     }
   }, [])
 
-  return (
+  const pageBody = (
     <>
       <div className="bmz-container">
         {/* HERO */}
         <section className="bmzHeroBlock" aria-label="Главный экран">
           <div className="bmzHeroInner">
-            
-              <h1 className="bmzHeroH1">
-                Автомобильные и железнодорожные весы под ключ по всему Казахстану
-              </h1>
-              <p className="bmzHeroSub">
-                Производство, фундамент, монтаж, автоматизация, гарантия 3 года
-              </p>
-              <div className="bmzHeroBtns">
+            <HomeHit path="hero.title" label="Заголовок (герой)" multiline as="h1" className="bmzHeroH1">
+              {content.hero?.title}
+            </HomeHit>
+            <HomeHit path="hero.subtitle" label="Подзаголовок (герой)" multiline as="p" className="bmzHeroSub">
+              {content.hero?.subtitle}
+            </HomeHit>
+            <div className="bmzHeroBtns">
+              {homeEditMode ? (
+                <HomeHit
+                  path="hero.primaryCta"
+                  label="Текст кнопки заявки"
+                  multiline={false}
+                  as="button"
+                  type="button"
+                  className="bmzBtnPrimary"
+                >
+                  {content.hero?.primaryCta}
+                </HomeHit>
+              ) : (
                 <button type="button" className="bmzBtnPrimary" onClick={() => scrollToId('home-lead')}>
-                  Получить расчет бесплатно
+                  {content.hero?.primaryCta}
                 </button>
+              )}
+              {homeEditMode ? (
+                <HomeHit
+                  path="hero.secondaryCta"
+                  label="Текст кнопки «продукция»"
+                  multiline={false}
+                  as="button"
+                  type="button"
+                  className="bmzBtnGhost"
+                >
+                  {content.hero?.secondaryCta}
+                </HomeHit>
+              ) : (
                 <button type="button" className="bmzBtnGhost" onClick={() => navigate('/products')}>
-                  Смотреть продукцию
+                  {content.hero?.secondaryCta}
                 </button>
-              
-            </div>
-
-
-          </div>
-        </section>
-
-        {/* STATS */}
-        <section className="bmzBlock bmzStatsBlock">
-          <div className="bmzBlockInner">
-            <div className="bmzSectionLabel">Коротко о результатах</div>
-            <div className="bmzSectionTitle">Делаем весы под задачу и сроки</div>
-            <div className="bmzStatsRow">
-              <div className="bmzStat">
-                <div className="bmzStatNum">8</div>
-                <div className="bmzStatLabel">типоразмеров автовесов</div>
-              </div>
-              <div className="bmzStat">
-                <div className="bmzStatNum">3 года</div>
-                <div className="bmzStatLabel">официальная гарантия</div>
-              </div>
-              <div className="bmzStat">
-                <div className="bmzStatNum">10 дней</div>
-                <div className="bmzStatLabel">монтаж под ключ</div>
-              </div>
-              <div className="bmzStat">
-                <div className="bmzStatNum">3 дня</div>
-                <div className="bmzStatLabel">выезд инженера</div>
-              </div>
-              <div className="bmzStatLast">
-                <div className="bmzStatNum">РК</div>
-                <div className="bmzStatLabel">производство в Казахстане</div>
-              </div>
+              )}
             </div>
           </div>
         </section>
@@ -219,23 +324,28 @@ export default function HomePage() {
         {/* UTP */}
         <section className="bmzBlockReasons">
           <div className="bmzBlockInner">
-            <div className="bmzSectionLabel"><p className="typed">Почему выбирают BMZ Engineering</p></div>
-            <div className="bmzSectionTitle">8 причин работать с нами</div>
+            <div className="bmzSectionLabel">
+              <p className="typed">
+                <HomeHit path="utp.label" label="Подпись блока «Почему мы»" multiline as="span">
+                  {content.utp?.label}
+                </HomeHit>
+              </p>
+            </div>
+            <HomeHit path="utp.title" label="Заголовок «Почему мы»" multiline as="div" className="bmzSectionTitle">
+              {content.utp?.title}
+            </HomeHit>
             <div className="bmzUtpGrid">
-              {[
-                { icon: '01', title: 'Собственное производство', desc: 'Напрямую с завода без посредников' },
-                { icon: '02', title: 'Монтаж от 10 дней', desc: 'Установка и ввод в эксплуатацию в краткие сроки' },
-                { icon: '03', title: 'Гарантия 3 года', desc: 'Официальная гарантия производителя на оборудование' },
-                { icon: '04', title: 'Всё под ключ', desc: 'Фундамент, монтаж, автоматизация и сдача объекта' },
-                { icon: '05', title: 'Удаленный контроль', desc: 'Отчеты и синхронизация для бизнеса (Telegram, Email, 1С)' },
-                { icon: '06', title: 'ГОСТ РК и госреестр', desc: 'Сертификация для коммерческого использования' },
-                { icon: '07', title: 'Сервис за 3 дня', desc: 'Выезд инженера по всему Казахстану' },
-                { icon: '08', title: 'Индивидуальный расчёт', desc: 'Под объект, бюджет и геологию' },
-              ].map((u) => (
+              {(content.utp?.items || []).map((u, ui) => (
                 <div key={u.icon} className="bmzUtpCard">
-                  <div className="bmzUtpIcon">{u.icon}</div>
-                  <div className="bmzUtpTitle">{u.title}</div>
-                  <div className="bmzUtpDesc">{u.desc}</div>
+                  <HomeHit path={`utp.items.${ui}.icon`} label={`Карточка ${ui + 1}: номер`} multiline={false} as="div" className="bmzUtpIcon">
+                    {u.icon}
+                  </HomeHit>
+                  <HomeHit path={`utp.items.${ui}.title`} label={`Карточка ${ui + 1}: заголовок`} multiline as="div" className="bmzUtpTitle">
+                    {u.title}
+                  </HomeHit>
+                  <HomeHit path={`utp.items.${ui}.desc`} label={`Карточка ${ui + 1}: текст`} multiline as="div" className="bmzUtpDesc">
+                    {u.desc}
+                  </HomeHit>
                 </div>
               ))}
             </div>
@@ -245,61 +355,77 @@ export default function HomePage() {
         {/* CATEGORIES */}
         <section id="home-categories" className="bmzBlock bmzBlockProducts">
           <div className="bmzBlockInner">
-            <div className="bmzSectionLabel">Продукция</div>
-            <div className="bmzSectionTitle">Выберите направление</div>
+            <HomeHit path="productsSection.label" label="Подпись блока «Продукция»" multiline as="div" className="bmzSectionLabel">
+              {content.productsSection?.label}
+            </HomeHit>
+            <HomeHit path="productsSection.title" label="Заголовок блока «Продукция»" multiline as="div" className="bmzSectionTitle">
+              {content.productsSection?.title}
+            </HomeHit>
 
             <div className="bmzCatGrid">
-              {categoryCards.map((c) => (
-                <div key={c.key} className="bmzCatCard" role="group" aria-label={c.title}>
-                  <div
-                    className={[
-                      'bmzCatTop',
-                      c.tone === 'green' ? 'bmzCatTop--green' : '',
-                      c.tone === 'orange' ? 'bmzCatTop--orange' : '',
-                    ].join(' ')}
-                    style={{ backgroundImage: `url(${c.image})` }}
-                  >
-                    <div className="bmzCatOverlay" />
-                    <div className="bmzCatIcon">{c.icon}</div>
-                    <div className="bmzCatBadge">{c.badge}</div>
-                  </div>
-                  <div className="bmzCatBody">
-                    <div className={['bmzCatTitle', c.tone === 'green' ? 'bmzCatTitle--green' : '', c.tone === 'orange' ? 'bmzCatTitle--orange' : ''].join(' ')}>
-                      {c.title}
-                    </div>
-                    <div className="bmzCatDesc">{c.desc}</div>
-                    <div className="bmzPills" aria-label="Ключевые параметры">
-                      {c.pills.map((p) => (
-                        <span
-                          key={p[0]}
-                          className={[
-                            'bmzPill',
-                            p[1] === 'green' ? 'bmzPill--green' : p[1] === 'orange' ? 'bmzPill--orange' : 'bmzPill--blue',
-                          ].join(' ')}
-                        >
-                          {p[0]}
-                        </span>
-                      ))}
-                    </div>
-                    <button
-                      type="button"
+              {categoryCards.map((c) => {
+                const cardInner = (
+                  <>
+                    <div
                       className={[
-                        'bmzCatBtn',
-                        c.tone === 'green' ? 'bmzCatBtn--green' : c.tone === 'orange' ? 'bmzCatBtn--orange' : 'bmzCatBtn--blue',
+                        'bmzCatTop',
+                        c.tone === 'green' ? 'bmzCatTop--green' : '',
+                        c.tone === 'orange' ? 'bmzCatTop--orange' : '',
                       ].join(' ')}
-                      onClick={() => {
-                        if (c.key === 'car' || c.key === 'rail') {
-                          navigate('/products')
-                        } else {
-                          scrollToId('home-lead')
-                        }
-                      }}
+                      style={{ backgroundImage: `url(${c.image})` }}
                     >
-                      {c.btn}
-                    </button>
-                  </div>
-                </div>
-              ))}
+                      <div className="bmzCatOverlay" />
+                      <div className="bmzCatIcon">{c.icon}</div>
+                      <div className="bmzCatBadge">{c.badge}</div>
+                    </div>
+                    <div className="bmzCatBody bmzCatBody--uniformHome">
+                      <div className={['bmzCatTitle', c.tone === 'green' ? 'bmzCatTitle--green' : '', c.tone === 'orange' ? 'bmzCatTitle--orange' : ''].join(' ')}>
+                        {c.title}
+                      </div>
+                      <div className="bmzCatDesc">{c.desc}</div>
+                      <div className="bmzPills" aria-label="Ключевые параметры">
+                        {c.pills.map((p) => (
+                          <span
+                            key={p[0]}
+                            className={[
+                              'bmzPill',
+                              p[1] === 'green' ? 'bmzPill--green' : p[1] === 'orange' ? 'bmzPill--orange' : 'bmzPill--blue',
+                            ].join(' ')}
+                          >
+                            {p[0]}
+                          </span>
+                        ))}
+                      </div>
+                      <div className="bmzCatBodyFill" aria-hidden="true" />
+                      <span
+                        className={[
+                          'bmzCatBtn',
+                          c.tone === 'green' ? 'bmzCatBtn--green' : c.tone === 'orange' ? 'bmzCatBtn--orange' : 'bmzCatBtn--blue',
+                        ].join(' ')}
+                      >
+                        {c.btn} →
+                      </span>
+                    </div>
+                  </>
+                )
+                if (homeEditMode) {
+                  return (
+                    <div key={c.key} className="bmzCatCard" role="group" aria-label={c.title}>
+                      {cardInner}
+                    </div>
+                  )
+                }
+                return (
+                  <Link
+                    key={c.key}
+                    to={c.slug ? `/products/c/${c.slug}` : '/products'}
+                    className="bmzCatCard bmzCatCard--link"
+                    aria-label={c.title}
+                  >
+                    {cardInner}
+                  </Link>
+                )
+              })}
             </div>
           </div>
         </section>
@@ -308,68 +434,15 @@ export default function HomePage() {
         <div className="sep"></div>
         <section id="home-industries" className="bmzBlock bmzBlock--industries">
           <div className="bmzBlockInner">
-            <div className="bmzSectionLabel">Где применяются весы</div>
-            <div className="bmzSectionTitle">Для каких предприятий</div>
+            <HomeHit path="industries.label" label="Подпись «Отрасли»" multiline as="div" className="bmzSectionLabel">
+              {content.industries?.label}
+            </HomeHit>
+            <HomeHit path="industries.title" label="Заголовок «Отрасли»" multiline as="div" className="bmzSectionTitle">
+              {content.industries?.title}
+            </HomeHit>
 
             <div className="bmzIndustriesGrid">
-              {[
-                {
-                  key: 'careers',
-                  title: '⚒ Карьеры и горнодобыча',
-                  tone: 'orange',
-                  pills: [
-                    ['100 т усиленные', 'orange'],
-                    ['120 т усиленные', 'orange'],
-                  ],
-                },
-                {
-                  key: 'agro',
-                  title: '🌾 Сельское хозяйство',
-                  tone: 'blue',
-                  pills: [
-                    ['40 т · 12 м', 'blue'],
-                    ['80 т · 18 м', 'blue'],
-                    ['100 т · 24 м', 'blue'],
-                  ],
-                },
-                {
-                  key: 'logistics',
-                  title: '🚛 Логистика и транспорт',
-                  tone: 'blue',
-                  pills: [
-                    ['60 т · 18 м', 'blue'],
-                    ['80 т · 18 м', 'blue'],
-                    ['100 т · 18 м', 'blue'],
-                  ],
-                },
-                {
-                  key: 'construction',
-                  title: '🏗 Строительство и ЖБИ',
-                  tone: 'blue',
-                  pills: [
-                    ['60 т · 18 м', 'blue'],
-                    ['80 т · 18 м', 'blue'],
-                  ],
-                },
-                {
-                  key: 'rail',
-                  title: '🚂 ЖД и горно-переработка',
-                  tone: 'blue',
-                  pills: [
-                    ['Вагонные · 150 т', 'blue'],
-                  ],
-                  desc: 'Размеры — индивидуально под объект',
-                },
-                {
-                  key: 'warehouse',
-                  title: '🏭 Промышленные склады',
-                  tone: 'green',
-                  pills: [
-                    ['80 т · 18 м', 'blue'],
-                    ['100 т · 18/24 м', 'blue'],
-                  ],
-                },
-              ].map((i) => (
+              {(content.industries?.items || []).map((i, ii) => (
                 <div
                   key={i.key}
                   className={[
@@ -379,19 +452,29 @@ export default function HomePage() {
                     i.tone === 'blue' ? 'bmzIndustryCard--blue' : '',
                   ].join(' ')}
                 >
-                  <div className="bmzIndustryTitle">{i.title}</div>
-                  {i.desc ? <div className="bmzComment">{i.desc}</div> : null}
+                  <HomeHit path={`industries.items.${ii}.title`} label={`Отрасль ${ii + 1}: заголовок`} multiline as="div" className="bmzIndustryTitle">
+                    {i.title}
+                  </HomeHit>
+                  {i.desc ? (
+                    <HomeHit path={`industries.items.${ii}.desc`} label={`Отрасль ${ii + 1}: доп. текст`} multiline as="div" className="bmzComment">
+                      {i.desc}
+                    </HomeHit>
+                  ) : null}
                   <div className="bmzIndustryItems">
-                    {i.pills.map((p) => (
-                      <span
-                        key={p[0]}
+                    {normPills(i).map((p, pi) => (
+                      <HomeHit
+                        key={`${i.key}-${pi}-${p.text}`}
+                        path={`industries.items.${ii}.pills.${pi}.text`}
+                        label={`Бейдж в «${(i.title || `отрасль ${ii + 1}`).slice(0, 40)}» — строка ${pi + 1}`}
+                        multiline={false}
+                        as="span"
                         className={[
                           'bmzPill',
-                          p[1] === 'green' ? 'bmzPill--green' : p[1] === 'orange' ? 'bmzPill--orange' : 'bmzPill--blue',
+                          p.tone === 'green' ? 'bmzPill--green' : p.tone === 'orange' ? 'bmzPill--orange' : 'bmzPill--blue',
                         ].join(' ')}
                       >
-                        {p[0]}
-                      </span>
+                        {p.text}
+                      </HomeHit>
                     ))}
                   </div>
                 </div>
@@ -403,10 +486,12 @@ export default function HomePage() {
         {/* LEAD FORM */}
         <section id="home-lead" className="bmzBlock bmzLeadBlock">
           <div className="bmzBlockInner">
-            <div className="bmzSectionLabel" style={{ color: 'var(--green)' }}>
-              Быстрая заявка
-            </div>
-            <div className="bmzSectionTitle">Получите расчет за 24 часа</div>
+            <HomeHit path="lead.label" label="Подпись блока заявки" multiline as="div" className="bmzSectionLabel" style={{ color: 'var(--green)' }}>
+              {content.lead?.label}
+            </HomeHit>
+            <HomeHit path="lead.title" label="Заголовок формы заявки" multiline as="div" className="bmzSectionTitle">
+              {content.lead?.title}
+            </HomeHit>
 
             <form
               onSubmit={(e) => {
@@ -458,7 +543,7 @@ export default function HomePage() {
                 </div>
 
                 <button className="bmzLeadBtn" type="submit">
-                  Отправить
+                  Отправить заявку
                 </button>
               </div>
             </form>
@@ -466,10 +551,14 @@ export default function HomePage() {
             <div className="bmzLeadNote">
               {formStatus === 'sent' ? (
                 <div className="bmzNoteCard" role="status" style={{ marginTop: 14 }}>
-                  Заявка отправлена. Мы свяжемся с вами и подготовим коммерческое предложение.
+                  <HomeHit path="lead.successMessage" label="Сообщение после отправки формы" multiline as="span">
+                    {content.lead?.successMessage}
+                  </HomeHit>
                 </div>
               ) : (
-                <>Нажимая “Отправить”, вы оставляете контакт для обратной связи. Консультация бесплатна.</>
+                <HomeHit path="lead.note" label="Текст под формой заявки" multiline as="span">
+                  {content.lead?.note}
+                </HomeHit>
               )}
             </div>
           </div>
@@ -478,21 +567,46 @@ export default function HomePage() {
         {/* PORTFOLIO */}
         <section className="bmzBlock">
           <div className="bmzBlockInner">
-            <div className="bmzSectionLabel">Портфолио</div>
-            <div className="bmzSectionTitle">Реализованные объекты</div>
+            <HomeHit path="portfolio.label" label="Подпись портфолио" multiline as="div" className="bmzSectionLabel">
+              {content.portfolio?.label}
+            </HomeHit>
+            <HomeHit path="portfolio.title" label="Заголовок портфолио" multiline as="div" className="bmzSectionTitle">
+              {content.portfolio?.title}
+            </HomeHit>
 
             <div className="bmzPortfolioGrid">
-              {[
-                { title: 'Карьер в Актобе', sub: '100 т, фундамент и монтаж под ключ' },
-                { title: 'Зернобаза в Костанае', sub: '80 т, автоматизация и интеграции' },
-                { title: 'Логистика в Астане', sub: '60 т, поставка и ввод в эксплуатацию' },
-                { title: 'ЖД объект в Актау', sub: '150 т, вагонные решения' },
-              ].map((p) => (
-                <div key={p.title} className="bmzProjCard">
-                  <div className="bmzProjImg" />
+              {portfolioItems.map((p, pi) => (
+                <div key={`${p.title}-${pi}`} className="bmzProjCard">
+                  {homeEditMode ? (
+                    <HomeHit
+                      path={`portfolio.items.${pi}.image`}
+                      label={`Портфолио ${pi + 1}: URL фото`}
+                      multiline={false}
+                      as="div"
+                      className="bmzProjImgWrap bmzProjImgWrap--hit"
+                    >
+                      {p.image ? (
+                        <img src={p.image} alt="" className="bmzProjImgPhoto" loading="lazy" decoding="async" />
+                      ) : (
+                        <div className="bmzProjImg bmzProjImg--placeholder">Укажите URL фото</div>
+                      )}
+                    </HomeHit>
+                  ) : p.image ? (
+                    <div className="bmzProjImgWrap">
+                      <img src={p.image} alt="" className="bmzProjImgPhoto" loading="lazy" decoding="async" />
+                    </div>
+                  ) : (
+                    <div className="bmzProjImgWrap">
+                      <div className="bmzProjImg bmzProjImg--placeholder" aria-hidden />
+                    </div>
+                  )}
                   <div className="bmzProjInfo">
-                    <div className="bmzProjTitle">{p.title}</div>
-                    <div className="bmzProjSub">{p.sub}</div>
+                    <HomeHit path={`portfolio.items.${pi}.title`} label={`Портфолио ${pi + 1}: название`} multiline as="div" className="bmzProjTitle">
+                      {p.title}
+                    </HomeHit>
+                    <HomeHit path={`portfolio.items.${pi}.sub`} label={`Портфолио ${pi + 1}: подзаголовок`} multiline as="div" className="bmzProjSub">
+                      {p.sub}
+                    </HomeHit>
                   </div>
                 </div>
               ))}
@@ -503,19 +617,22 @@ export default function HomePage() {
         {/* TRUST */}
         <section className="bmzBlock">
           <div className="bmzBlockInner">
-            <div className="bmzSectionLabel">Доверие</div>
-            <div className="bmzSectionTitle">Подтвержденное качество</div>
+            <HomeHit path="trust.label" label="Подпись «Доверие»" multiline as="div" className="bmzSectionLabel">
+              {content.trust?.label}
+            </HomeHit>
+            <HomeHit path="trust.title" label="Заголовок «Доверие»" multiline as="div" className="bmzSectionTitle">
+              {content.trust?.title}
+            </HomeHit>
 
             <div className="bmzTrustGrid">
-              {[
-                { title: 'Госреестр РК', desc: 'Весы зарегистрированы как средство измерения' },
-                { title: 'ГОСТ РК', desc: 'Соответствие ГОСТ допуска к коммерческому взвешиванию' },
-                { title: 'СТ-КЗ', desc: 'Произведено в Казахстане, сертификат происхождения' },
-                { title: 'Гарантия 3 года', desc: 'Официальная гарантия производителя на оборудование' },
-              ].map((t) => (
+              {(content.trust?.items || []).map((t, ti) => (
                 <div key={t.title} className="bmzTrustCard">
-                  <div className="bmzTrustTitle">{t.title}</div>
-                  <div className="bmzTrustDesc">{t.desc}</div>
+                  <HomeHit path={`trust.items.${ti}.title`} label={`Доверие ${ti + 1}: заголовок`} multiline as="div" className="bmzTrustTitle">
+                    {t.title}
+                  </HomeHit>
+                  <HomeHit path={`trust.items.${ti}.desc`} label={`Доверие ${ti + 1}: текст`} multiline as="div" className="bmzTrustDesc">
+                    {t.desc}
+                  </HomeHit>
                 </div>
               ))}
             </div>
@@ -525,23 +642,22 @@ export default function HomePage() {
         {/* ABOUT */}
         <section id="home-about" className="bmzBlock">
           <div className="bmzBlockInner">
-            <div className="bmzSectionLabel">О компании</div>
-            <div className="bmzSectionTitle">BMZ Engineering: производитель, а не дилер</div>
+            <HomeHit path="about.label" label="Подпись «О компании»" multiline as="div" className="bmzSectionLabel">
+              {content.about?.label}
+            </HomeHit>
+            <HomeHit path="about.title" label="Заголовок «О компании»" multiline as="div" className="bmzSectionTitle">
+              {content.about?.title}
+            </HomeHit>
 
             <div className="bmzGrid2">
-              {[
-                {
-                  title: 'Производство в Казахстане',
-                  desc: 'Собственный завод и контроль качества на каждом этапе: сталь, сварка и обработка на станках ЧПУ.',
-                },
-                {
-                  title: 'Полный цикл работ',
-                  desc: 'От проектирования фундамента до сдачи объекта. Работаем по всему Казахстану и ведем проект под ключ.',
-                },
-              ].map((a) => (
+              {(content.about?.items || []).map((a, ai) => (
                 <div key={a.title} className="bmzInfoCard">
-                  <div className="bmzInfoTitle">{a.title}</div>
-                  <div className="bmzGrayText">{a.desc}</div>
+                  <HomeHit path={`about.items.${ai}.title`} label={`О компании ${ai + 1}: заголовок`} multiline as="div" className="bmzInfoTitle">
+                    {a.title}
+                  </HomeHit>
+                  <HomeHit path={`about.items.${ai}.desc`} label={`О компании ${ai + 1}: текст`} multiline as="div" className="bmzGrayText">
+                    {a.desc}
+                  </HomeHit>
                 </div>
               ))}
             </div>
@@ -565,28 +681,58 @@ export default function HomePage() {
               paddingBottom: 'clamp(22px, 4vw, 42px)',
             }}
           >
-            <div style={{ fontFamily: 'Unbounded, Inter, sans-serif', fontWeight: 900, fontSize: 'clamp(18px, 3vw, 22px)', marginBottom: 8 }}>
-              Нужны весы или расчет фундамента?
-            </div>
-            <div style={{ color: 'rgba(144,202,249,0.95)', fontSize: 'clamp(13px, 1.8vw, 15px)', marginBottom: 18 }}>
-              Оставьте заявку — перезвоним в течение 30 минут
-            </div>
+            <HomeHit
+              path="bottomCta.title"
+              label="Нижний блок: заголовок"
+              multiline
+              as="div"
+              style={{ fontFamily: 'Unbounded, Inter, sans-serif', fontWeight: 900, fontSize: 'clamp(18px, 3vw, 22px)', marginBottom: 8 }}
+            >
+              {content.bottomCta?.title}
+            </HomeHit>
+            <HomeHit
+              path="bottomCta.subtitle"
+              label="Нижний блок: подзаголовок"
+              multiline
+              as="div"
+              style={{ color: 'rgba(144,202,249,0.95)', fontSize: 'clamp(13px, 1.8vw, 15px)', marginBottom: 18 }}
+            >
+              {content.bottomCta?.subtitle}
+            </HomeHit>
 
             <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-              <button
-                type="button"
-                className="bmzBtnPrimary"
-                onClick={() => scrollToId('home-lead')}
-              >
-                Получить КП бесплатно
-              </button>
-              <button
-                type="button"
-                className="bmzBtnGhost"
-                onClick={() => scrollToId('home-lead')}
-              >
-                Написать в WhatsApp
-              </button>
+              {homeEditMode ? (
+                <HomeHit
+                  path="bottomCta.primaryBtn"
+                  label="Нижний блок: кнопка 1"
+                  multiline={false}
+                  as="button"
+                  type="button"
+                  className="bmzBtnPrimary"
+                >
+                  {content.bottomCta?.primaryBtn}
+                </HomeHit>
+              ) : (
+                <button type="button" className="bmzBtnPrimary" onClick={() => scrollToId('home-lead')}>
+                  {content.bottomCta?.primaryBtn}
+                </button>
+              )}
+              {homeEditMode ? (
+                <HomeHit
+                  path="bottomCta.secondaryBtn"
+                  label="Нижний блок: кнопка 2"
+                  multiline={false}
+                  as="button"
+                  type="button"
+                  className="bmzBtnGhost"
+                >
+                  {content.bottomCta?.secondaryBtn}
+                </HomeHit>
+              ) : (
+                <button type="button" className="bmzBtnGhost" onClick={openBottomWhatsApp}>
+                  {content.bottomCta?.secondaryBtn}
+                </button>
+              )}
             </div>
           </div>
         </section>
@@ -596,65 +742,73 @@ export default function HomePage() {
           <div className="bmzFooterInner">
             <div className="bmzFooterGrid">
               <div>
-                <div className="bmzFooterColTitle">BMZ Engineering</div>
+                <HomeHit path="footer.col1Title" label="Подвал: колонка 1 заголовок" multiline as="div" className="bmzFooterColTitle">
+                  {content.footer?.col1Title}
+                </HomeHit>
                 <div className="bmzFooterColText">
-                  ТОО “BMZ Engineering”
-                  <br />
-                  БИН: [указать реквизиты]
-                  <br />
-                  г. Астана
+                  <HomeHit path="footer.col1Text" label="Подвал: колонка 1 текст" multiline as="div">
+                    <MultilineText text={content.footer?.col1Text} />
+                  </HomeHit>
                 </div>
               </div>
 
               <div>
-                <div className="bmzFooterColTitle">Продукция</div>
+                <HomeHit path="footer.col2Title" label="Подвал: колонка 2 заголовок" multiline as="div" className="bmzFooterColTitle">
+                  {content.footer?.col2Title}
+                </HomeHit>
                 <div className="bmzFooterColText">
-                  Автомобильные весы
-                  <br />
-                  ЖД весы
-                  <br />
-                  Фундамент
-                  <br />
-                  Автоматизация
-                  <br />
-                  Оборудование
+                  <HomeHit path="footer.col2Text" label="Подвал: колонка 2 текст" multiline as="div">
+                    <MultilineText text={content.footer?.col2Text} />
+                  </HomeHit>
                 </div>
               </div>
 
               <div>
-                <div className="bmzFooterColTitle">Услуги</div>
+                <HomeHit path="footer.col3Title" label="Подвал: колонка 3 заголовок" multiline as="div" className="bmzFooterColTitle">
+                  {content.footer?.col3Title}
+                </HomeHit>
                 <div className="bmzFooterColText">
-                  Монтаж и ПНР
-                  <br />
-                  Калибровка и поверка
-                  <br />
-                  Модернизация
-                  <br />
-                  Ремонт
-                  <br />
-                  Сервис
+                  <HomeHit path="footer.col3Text" label="Подвал: колонка 3 текст" multiline as="div">
+                    <MultilineText text={content.footer?.col3Text} />
+                  </HomeHit>
                 </div>
               </div>
 
               <div>
-                <div className="bmzFooterColTitle">Контакты</div>
+                <HomeHit path="footer.col4Title" label="Подвал: колонка 4 заголовок" multiline as="div" className="bmzFooterColTitle">
+                  {content.footer?.col4Title}
+                </HomeHit>
                 <div className="bmzFooterColText">
-                  +7 (XXX) XXX-XX-XX
-                  <br />
-                  email@example.com
-                  <br />
-                  avtovesy.net
+                  <HomeHit path="footer.col4Text" label="Подвал: колонка 4 текст" multiline as="div">
+                    <MultilineText text={content.footer?.col4Text} />
+                  </HomeHit>
                 </div>
               </div>
             </div>
 
-            <div className="bmzFooterBottom">
-              © 2025 BMZ Engineering. Все права защищены. Политика конфиденциальности
-            </div>
+            <HomeHit path="footer.copyright" label="Копирайт в подвале" multiline as="div" className="bmzFooterBottom">
+              {content.footer?.copyright}
+            </HomeHit>
           </div>
         </footer>
       </div>
     </>
   )
+
+  if (homeEditMode) {
+    return (
+      <HomeEditProvider
+        draft={editDraft ?? HOME_DEFAULTS}
+        setDraft={setEditDraft}
+        onServerSave={saveHomeToServer}
+        onBackToAdmin={() => navigate('/auelbek/dashboard')}
+        saveDisabled={!editLoaded}
+      >
+        {pageBody}
+      </HomeEditProvider>
+    )
+  }
+
+  return pageBody
 }
 

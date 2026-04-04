@@ -15,31 +15,12 @@ export default function MainLayout() {
 
   const navLinks = useMemo(
     () => [
-      { key: 'products', label: 'Автовесы', onClick: () => navigate('/products') },
-      {
-        key: 'found',
-        label: 'Фундамент',
-        onClick: () =>
-          isHome ? scrollToId('home-about') : navigate('/', { state: { scrollTo: 'home-about' } }),
-      },
-      {
-        key: 'auto',
-        label: 'Автоматизация',
-        onClick: () =>
-          isHome ? scrollToId('home-categories') : navigate('/', { state: { scrollTo: 'home-categories' } }),
-      },
-      {
-        key: 'equip',
-        label: 'Оборудование',
-        onClick: () =>
-          isHome ? scrollToId('home-categories') : navigate('/', { state: { scrollTo: 'home-categories' } }),
-      },
-      {
-        key: 'services',
-        label: 'Услуги',
-        onClick: () =>
-          isHome ? scrollToId('home-categories') : navigate('/', { state: { scrollTo: 'home-categories' } }),
-      },
+      { key: 'products', label: 'Автовесы', to: '/products/c/avtomobilnye-vesy' },
+      { key: 'rail', label: 'ЖД весы', to: '/products/c/zheleznodorozhnye-vesy' },
+      { key: 'found', label: 'Фундамент', to: '/products/c/fundament' },
+      { key: 'auto', label: 'Автоматизация', to: '/products/c/avtomatizatsiya' },
+      { key: 'equip', label: 'Оборудование', to: '/products/c/oborudovanie' },
+      { key: 'services', label: 'Услуги', to: '/products/c/uslugi' },
       {
         key: 'about',
         label: 'О нас',
