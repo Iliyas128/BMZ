@@ -62,6 +62,25 @@
   padding-left: clamp(10px, 2.2vw, 30px);
 }
 
+/* Знак «Сделано в КЗ»: внизу справа, закреплён к окну (остается на месте при прокрутке) */
+.bmzMadeInKzBadge {
+  position: fixed;
+  bottom: max(clamp(10px, 4.0vw, 82px), env(safe-area-inset-bottom, 0px));
+  right: max(clamp(10px, 2.5vw, 22px), env(safe-area-inset-right, 0px));
+  z-index: 45;
+  pointer-events: none;
+  line-height: 0;
+}
+
+.bmzMadeInKzBadgeImg {
+  height: clamp(34px, 10.8vw, 182px);
+  width: auto;
+  max-width: min(200px, 46vw);
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 2px 12px rgba(0, 0, 0, 0.4));
+}
+
 .bmzLogoMark {
   width: 26px;
   height: 26px;
@@ -336,6 +355,138 @@ a.bmzMobileLinkBtn:hover {
   border-radius: 32px 32px 0 0;
 }
 
+/*
+  Единые отступы карточек: главная «Продукция» (.bmzBlockProducts) и каталог (.bmzCatalogPage).
+  Сетка ~20–24px, тело карточки ~20px, шаги между заголовком / текстом / кнопкой как на главном экране.
+*/
+.bmzBlockProducts .bmzBlockInner,
+.bmzCatalogPage .bmz-container {
+  padding: clamp(26px, 4.5vw, 48px) clamp(18px, 3.8vw, 36px);
+}
+
+.bmzBlockProducts .bmzSectionLabel,
+.bmzCatalogPage .bmzCatalogPageIntro {
+  margin-bottom: 10px;
+  margin-top: 0;
+}
+
+.bmzBlockProducts .bmzSectionTitle,
+.bmzCatalogPage .bmzSectionTitle {
+  margin-bottom: clamp(22px, 3.2vw, 32px);
+}
+
+.bmzCatalogPage .bmzBackBtn ~ .bmzSectionTitle {
+  margin-top: clamp(6px, 1.2vw, 14px);
+}
+
+.bmzBlockProducts .bmzCatGrid,
+.bmzCatalogPage .bmzCatGrid {
+  gap: clamp(20px, 2.6vw, 24px);
+}
+
+.bmzBlockProducts .bmzCatCard,
+.bmzCatalogPage .bmzCatCard {
+  border-radius: 20px;
+  min-height: 0;
+}
+
+.bmzBlockProducts .bmzCatTop,
+.bmzCatalogPage .bmzCatTop {
+  height: clamp(168px, 26vh, 300px);
+  padding: 18px;
+  border-radius: 20px 20px 0 0;
+}
+
+.bmzBlockProducts .bmzCatBody--uniformHome,
+.bmzBlockProducts .bmzCatBody,
+.bmzCatalogPage .bmzCatBody--uniform,
+.bmzCatalogPage .bmzCatBody {
+  padding: 20px;
+}
+
+.bmzBlockProducts .bmzCatTitle,
+.bmzCatalogPage .bmzCatTitle {
+  margin-bottom: 10px;
+  font-size: 15px;
+}
+
+.bmzBlockProducts .bmzCatDesc,
+.bmzCatalogPage .bmzCatDesc {
+  margin-bottom: 14px;
+  line-height: 1.55;
+}
+
+.bmzBlockProducts .bmzCatBody--uniformHome .bmzCatDesc,
+.bmzCatalogPage .bmzCatBody--uniform .bmzCatDesc {
+  margin-bottom: 14px;
+}
+
+.bmzBlockProducts .bmzPills {
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.bmzBlockProducts .bmzCatBody--uniformHome .bmzPills {
+  margin-bottom: 18px;
+}
+
+.bmzBlockProducts .bmzCatBtn,
+.bmzCatalogPage .bmzCatBtn {
+  padding: 14px 18px;
+  border-radius: 12px;
+}
+
+.bmzCatalogPage .bmzCatalogAutoGrid {
+  gap: clamp(20px, 2.6vw, 24px);
+}
+
+.bmzCatalogPage .bmzProdCard {
+  border-radius: 20px;
+  min-height: 0;
+}
+
+.bmzCatalogPage .bmzProdImg {
+  padding: 18px;
+  border-radius: 20px 20px 0 0;
+}
+
+.bmzCatalogPage .bmzProdCardBody,
+.bmzCatalogPage .bmzProdCardBody--uniform {
+  padding: 20px;
+}
+
+.bmzCatalogPage .bmzProdTitle {
+  font-size: 15px;
+  margin-bottom: 10px;
+}
+
+.bmzCatalogPage .bmzProdSub {
+  margin-bottom: 14px;
+  line-height: 1.55;
+}
+
+.bmzCatalogPage .bmzProdSpecs {
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.bmzCatalogPage .bmzProdCardFooter .bmzProdPrice {
+  margin-bottom: 14px;
+}
+
+.bmzCatalogPage .bmzProdBtn {
+  padding: 14px 18px;
+  border-radius: 12px;
+}
+
+.bmzCatalogPage .bmzBackBtn {
+  margin-bottom: clamp(18px, 3vw, 26px);
+}
+
+.bmzCatalogPage .bmzSpinnerWrap--page {
+  margin-bottom: clamp(12px, 2.5vw, 22px);
+}
+
 .bmzBlockInner {
   padding: clamp(18px, 3vw, 32px);
 }
@@ -379,16 +530,17 @@ a.bmzMobileLinkBtn:hover {
   font-family: Unbounded, Inter, sans-serif;
   color: #fff;
   font-weight: 900;
-  font-size: clamp(20px, 3.2vw, 70px);
+  font-size: clamp(20px, 3.4vw, 70px);
   line-height: 1.02;
   margin-bottom: 10px;
-  max-width: 55%;
+  max-width: 53%;
 }
 
 .bmzHeroSub {
-  color: rgba(144, 202, 249, 0.95);
+  color: #E5E7EB;
   font-size: clamp(14px, 2vw, 18px);
   margin-bottom: 22px;
+  max-width: 40%;
 }
 
 .bmzHeroBtns {
@@ -1803,6 +1955,11 @@ a.bmzMobileLinkBtn:hover {
 
   .bmzBlockProducts {
     border-radius: 24px 24px 0 0;
+  }
+
+  .bmzBlockProducts .bmzCatCard,
+  .bmzCatalogPage .bmzCatCard {
+    min-height: 0;
   }
 
   .bmzIndustriesGrid {

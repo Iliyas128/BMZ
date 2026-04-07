@@ -48,10 +48,10 @@ export default function CatalogHome() {
         </div>
       </section>
 
-      <main className="bmzPageContent">
+      <main className="bmzPageContent bmzCatalogPage">
         <div className="bmz-container">
           {loading ? <BmzSpinner label="Загрузка каталога…" /> : null}
-          <div className="bmzSectionLabel" style={{ marginTop: 12 }}>
+          <div className="bmzSectionLabel bmzCatalogPageIntro">
             Направления
           </div>
           <div className="bmzSectionTitle">Вся продукция BMZ</div>

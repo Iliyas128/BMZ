@@ -73,7 +73,7 @@ export default function CatalogCategory() {
         </div>
       </section>
 
-      <main className="bmzPageContent">
+      <main className="bmzPageContent bmzCatalogPage">
         <div className="bmz-container">
           <button type="button" className="bmzBackBtn" onClick={() => navigate('/products')}>
             ← Все направления
@@ -97,7 +97,7 @@ export default function CatalogCategory() {
 
           {subs.length > 0 ? (
             <>
-              <div className="bmzSectionLabel" style={{ marginTop: 12 }}>
+              <div className="bmzSectionLabel bmzCatalogPageIntro">
                 Подкатегории
               </div>
               <div className="bmzSectionTitle">Выберите линейку</div>

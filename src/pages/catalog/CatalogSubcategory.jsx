@@ -92,7 +92,7 @@ export default function CatalogSubcategory() {
         </div>
       </section>
 
-      <main className="bmzPageContent">
+      <main className="bmzPageContent bmzCatalogPage">
         <div className="bmz-container">
           <button type="button" className="bmzBackBtn" onClick={() => navigate(`/products/c/${catSlug}`)}>
             ← Все подкатегории
@@ -100,9 +100,7 @@ export default function CatalogSubcategory() {
 
           {loading ? <BmzSpinner label="Загрузка моделей…" /> : null}
 
-          <div className="bmzSectionTitle" style={{ marginTop: 8 }}>
-            Модели
-          </div>
+          <div className="bmzSectionTitle">Модели</div>
 
           <div className="bmzCatalogAutoGrid bmzCatalogAutoGrid--products">
             {products.map((p) => {
