@@ -645,11 +645,14 @@ export default function AdminDashboard() {
                             </label>
                             <label className="bmzAdminLabel">
                               Краткое описание
-                              <input
-                                className="bmzInput"
+                              <textarea
+                                className="bmzInput bmzAdminTextarea"
+                                rows={2}
                                 value={productForm.shortDescription}
                                 onChange={(e) => setProductForm((f) => ({ ...f, shortDescription: e.target.value }))}
+                                placeholder="Например:\nСтандартные весы\n40 тонн"
                               />
+                              <span className="bmzAdminFieldHint">Можно вводить с переносами строк — на карточке сохранится формат.</span>
                             </label>
                             <label className="bmzAdminLabel">
                               Полное описание
@@ -737,10 +740,10 @@ export default function AdminDashboard() {
                 <thead>
                   <tr>
                     <th className="bmzAdminTreeColExpand" />
-                    <th>Название</th>
-                    <th>Slug / цена</th>
+                    <th>Позиция</th>
+                    <th>Slug / Цена</th>
                     <th>Статус</th>
-                    <th />
+                    <th>Действия</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -750,8 +753,9 @@ export default function AdminDashboard() {
                       <Fragment key={String(cat._id)}>
                         <tr className="bmzAdminTreeCat">
                           <td colSpan={5}>
+                            <span className="bmzAdminCellType bmzAdminCellType--cat">Направление</span>
                             <strong>{cat.name}</strong>
-                            <span className="bmzGrayText"> — направление (не редактируется)</span>
+                            <span className="bmzGrayText"> — не редактируется</span>
                             <button
                               type="button"
                               className="bmzAdminMini"
@@ -787,7 +791,8 @@ export default function AdminDashboard() {
                                   </button>
                                 </td>
                                 <td>
-                                  Подкатегория: <strong>{s.name}</strong>
+                                  <span className="bmzAdminCellType bmzAdminCellType--sub">Подкатегория</span>
+                                  <strong>{s.name}</strong>
                                   <button
                                     type="button"
                                     className="bmzAdminMini"
@@ -798,17 +803,26 @@ export default function AdminDashboard() {
                                   </button>
                                 </td>
                                 <td className="bmzAdminMono">{s.slug}</td>
-                                <td>{s.isActive !== false ? 'активна' : 'выкл.'}</td>
+                                <td>
+                                  <span
+                                    className={[
+                                      'bmzAdminStatus',
+                                      s.isActive !== false ? 'bmzAdminStatus--on' : 'bmzAdminStatus--off',
+                                    ].join(' ')}
+                                  >
+                                    {s.isActive !== false ? 'Активна' : 'Выключена'}
+                                  </span>
+                                </td>
                                 <td className="bmzAdminRowActions">
                                   <button type="button" className="bmzAdminMini" onClick={() => editSub(s)}>
-                                    Изм.
+                                    Изменить
                                   </button>
                                   <button
                                     type="button"
                                     className="bmzAdminMini bmzAdminMini--danger"
                                     onClick={() => deleteSub(s._id)}
                                   >
-                                    Удал.
+                                    Удалить
                                   </button>
                                 </td>
                               </tr>
@@ -831,7 +845,8 @@ export default function AdminDashboard() {
                                               <span className="bmzAdminThumb bmzAdminThumb--ph">—</span>
                                             )}
                                             <span>
-                                              <strong>Товар:</strong> {p.name}
+                                              <span className="bmzAdminCellType bmzAdminCellType--prod">Товар</span>
+                                              <strong>{p.name}</strong>
                                             </span>
                                           </span>
                                         </td>
@@ -840,14 +855,14 @@ export default function AdminDashboard() {
                                         </td>
                                         <td className="bmzAdminRowActions">
                                           <button type="button" className="bmzAdminMini" onClick={() => editProduct(p)}>
-                                            Изм.
+                                            Изменить
                                           </button>
                                           <button
                                             type="button"
                                             className="bmzAdminMini bmzAdminMini--danger"
                                             onClick={() => deleteProduct(p._id)}
                                           >
-                                            Удал.
+                                            Удалить
                                           </button>
                                         </td>
                                       </tr>

@@ -1,7 +1,6 @@
 import { useCallback, useMemo } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import BmzTopNav from '../components/BmzTopNav'
-import MadeInKzBadge from '../components/MadeInKzBadge'
 
 const scrollToId = (id) => {
   const el = document.getElementById(id)
@@ -46,7 +45,6 @@ export default function MainLayout() {
         onCta={handleCta}
       />
       <Outlet />
-      <MadeInKzBadge />
     </div>
   )
 }

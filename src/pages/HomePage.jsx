@@ -319,6 +319,15 @@ export default function HomePage({ homeEditMode = false }) {
               )}
             </div>
           </div>
+          <div className="bmzHeroMadeInKzOnHero" aria-hidden="true">
+            <img
+              src="/madeInKZ.png"
+              alt=""
+              loading="lazy"
+              decoding="async"
+              className="bmzHeroMadeInKzOnHeroImg"
+            />
+          </div>
         </section>
 
         {/* UTP */}
