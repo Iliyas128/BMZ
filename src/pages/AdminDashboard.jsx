@@ -34,6 +34,8 @@ const emptyProduct = {
   imagesUrls: '',
 }
 
+const AVAILABLE_ADMIN_CATEGORY_SLUGS = new Set(['avtomobilnye-vesy', 'zheleznodorozhnye-vesy'])
+
 function parseImagesUrls(text) {
   return String(text || '')
     .split('\n')
@@ -125,7 +127,10 @@ export default function AdminDashboard() {
     }
   }, [catalogFormOpen, closeCatalogForm])
 
-  const categoriesSorted = useMemo(() => sortCategoriesFixed(categories), [categories])
+  const categoriesSorted = useMemo(
+    () => sortCategoriesFixed(categories).filter((c) => AVAILABLE_ADMIN_CATEGORY_SLUGS.has(c.slug)),
+    [categories],
+  )
 
   const subsByCategory = useMemo(() => {
     const map = new Map()
@@ -441,8 +446,7 @@ export default function AdminDashboard() {
           <section className="bmzAdminSection">
             <h2 className="bmzAdminH2">Подкатегории и товары</h2>
             <p className="bmzGrayText" style={{ marginBottom: 16, maxWidth: 800 }}>
-              Шесть направлений зафиксированы. Таблица ниже: подкатегории и товары. Добавление и правка открываются в
-              окне по центру. Фото товара — URL-ы, по одному в строке. <strong>Порядок</strong> — число сортировки: чем
+              В админке видны только два направления. Таблица ниже: подкатегории и товары для этих направлений. Добавление и правка открываются в
               оно меньше, тем выше строка в списке на сайте (0 — первым).
             </p>
 

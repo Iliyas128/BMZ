@@ -8,7 +8,8 @@ import { HomeEditProvider } from '../context/HomeEditContext'
 import { useToast } from '../context/ToastContext'
 import { HOME_DEFAULTS } from '../data/homeDefaults'
 import { useHomeContent } from '../hooks/useHomeContent'
-import { filterFixedCategories } from '../utils/catalogCategoryOrder'
+import CatalogRequestModal from '../components/CatalogRequestModal'
+import { sortCategoriesFixed } from '../utils/catalogCategoryOrder'
 
 function MultilineText({ text }) {
   if (!text) return null
@@ -85,7 +86,7 @@ const fallbackCategoryCards = [
       ['Сплошной с пандусами', 'blue'],
       ['Приямочного типа', 'blue'],
     ],
-    btn: 'Открыть',
+    btn: 'Узнать цену',
   },
   {
     key: 'automation',
@@ -102,7 +103,7 @@ const fallbackCategoryCards = [
       ['Telegram / Email', 'blue'],
       ['Синхронизация с 1С', 'blue'],
     ],
-    btn: 'Открыть',
+    btn: 'Узнать цену',
   },
   {
     key: 'equipment',
@@ -119,7 +120,7 @@ const fallbackCategoryCards = [
       ['Крановые и платформенные весы', 'blue'],
       ['Весы для животных', 'blue'],
     ],
-    btn: 'Открыть',
+    btn: 'Узнать цену',
   },
   {
     key: 'services',
@@ -136,7 +137,7 @@ const fallbackCategoryCards = [
       ['Модернизация весов', 'green'],
       ['Сервисное обслуживание', 'green'],
     ],
-    btn: 'Открыть',
+    btn: 'Узнать цену',
   },
 ]
 
@@ -162,8 +163,9 @@ export default function HomePage({ homeEditMode = false }) {
     capacity: '',
     phone: '',
   })
-  const [formStatus, setFormStatus] = useState('idle') // 'idle' | 'sent'
+  const [formStatus, setFormStatus] = useState('idle')
   const [categoryCards, setCategoryCards] = useState(fallbackCategoryCards)
+  const [reqModal, setReqModal] = useState({ open: false, type: '' })
 
   useEffect(() => {
     if (!homeEditMode) return
@@ -181,9 +183,7 @@ export default function HomePage({ homeEditMode = false }) {
       .finally(() => {
         if (ok) setEditLoaded(true)
       })
-    return () => {
-      ok = false
-    }
+    return () => { ok = false }
   }, [homeEditMode])
 
   const content = homeEditMode ? (editDraft ?? HOME_DEFAULTS) : publicContent
@@ -238,38 +238,29 @@ export default function HomePage({ homeEditMode = false }) {
 
   useEffect(() => {
     let isMounted = true
-
     async function loadCategories() {
       try {
         const response = await fetch(`${API_BASE_URL}/api/catalog/categories`)
         if (!response.ok) return
-
         const items = await response.json()
         if (!Array.isArray(items) || items.length === 0) return
-
-        const sorted = filterFixedCategories(items)
-        const mapped = sorted.slice(0, 6).map((item, idx) => {
-          const fallback = fallbackCategoryCards[idx] || fallbackCategoryCards[0]
+        const sorted = sortCategoriesFixed(items)
+        const mapped = fallbackCategoryCards.map((fallback) => {
+          const item = sorted.find((item) => item.slug === fallback.slug)
           return {
             ...fallback,
-            key: item.slug || fallback.key,
-            slug: item.slug || fallback.slug,
-            title: item.name || fallback.title,
-            desc: item.description || fallback.desc,
-            image: item.image || fallback.image,
+            title: item?.name || fallback.title,
+            desc: item?.description || fallback.desc,
+            image: item?.image || fallback.image,
           }
         })
-
         if (isMounted) setCategoryCards(mapped)
       } catch {
         // Keep fallback cards when backend is unavailable.
       }
     }
-
     loadCategories()
-    return () => {
-      isMounted = false
-    }
+    return () => { isMounted = false }
   }, [])
 
   const pageBody = (
@@ -286,14 +277,7 @@ export default function HomePage({ homeEditMode = false }) {
             </HomeHit>
             <div className="bmzHeroBtns">
               {homeEditMode ? (
-                <HomeHit
-                  path="hero.primaryCta"
-                  label="Текст кнопки заявки"
-                  multiline={false}
-                  as="button"
-                  type="button"
-                  className="bmzBtnPrimary"
-                >
+                <HomeHit path="hero.primaryCta" label="Текст кнопки заявки" multiline={false} as="button" type="button" className="bmzBtnPrimary">
                   {content.hero?.primaryCta}
                 </HomeHit>
               ) : (
@@ -302,14 +286,7 @@ export default function HomePage({ homeEditMode = false }) {
                 </button>
               )}
               {homeEditMode ? (
-                <HomeHit
-                  path="hero.secondaryCta"
-                  label="Текст кнопки «продукция»"
-                  multiline={false}
-                  as="button"
-                  type="button"
-                  className="bmzBtnGhost"
-                >
+                <HomeHit path="hero.secondaryCta" label="Текст кнопки «продукция»" multiline={false} as="button" type="button" className="bmzBtnGhost">
                   {content.hero?.secondaryCta}
                 </HomeHit>
               ) : (
@@ -320,13 +297,7 @@ export default function HomePage({ homeEditMode = false }) {
             </div>
           </div>
           <div className="bmzHeroMadeInKzOnHero" aria-hidden="true">
-            <img
-              src="/madeInKZ.png"
-              alt=""
-              loading="lazy"
-              decoding="async"
-              className="bmzHeroMadeInKzOnHeroImg"
-            />
+            <img src="/madeInKZ.png" alt="" loading="lazy" decoding="async" className="bmzHeroMadeInKzOnHeroImg" />
           </div>
         </section>
 
@@ -406,14 +377,34 @@ export default function HomePage({ homeEditMode = false }) {
                         ))}
                       </div>
                       <div className="bmzCatBodyFill" aria-hidden="true" />
-                      <span
-                        className={[
-                          'bmzCatBtn',
-                          c.tone === 'green' ? 'bmzCatBtn--green' : c.tone === 'orange' ? 'bmzCatBtn--orange' : 'bmzCatBtn--blue',
-                        ].join(' ')}
-                      >
-                        {c.btn} →
-                      </span>
+                      <div className="bmzCatBtnRow">
+                        {(c.slug === 'avtomobilnye-vesy' || c.slug === 'zheleznodorozhnye-vesy') ? (
+                          <Link
+                            to={c.slug ? `/products/c/${c.slug}` : '/products'}
+                            className={[
+                              'bmzCatBtn bmzCatBtn--outline',
+                              c.tone === 'green' ? 'bmzCatBtn--outlineGreen' : c.tone === 'orange' ? 'bmzCatBtn--outlineOrange' : 'bmzCatBtn--outlineBlue',
+                            ].join(' ')}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            Каталог →
+                          </Link>
+                        ) : null}
+                        <button
+                          type="button"
+                          className={[
+                            'bmzCatBtn',
+                            c.tone === 'green' ? 'bmzCatBtn--green' : c.tone === 'orange' ? 'bmzCatBtn--orange' : 'bmzCatBtn--blue',
+                          ].join(' ')}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            e.preventDefault()
+                            setReqModal({ open: true, type: c.title })
+                          }}
+                        >
+                          Узнать цену
+                        </button>
+                      </div>
                     </div>
                   </>
                 )
@@ -425,14 +416,9 @@ export default function HomePage({ homeEditMode = false }) {
                   )
                 }
                 return (
-                  <Link
-                    key={c.key}
-                    to={c.slug ? `/products/c/${c.slug}` : '/products'}
-                    className="bmzCatCard bmzCatCard--link"
-                    aria-label={c.title}
-                  >
+                  <div key={c.key} className="bmzCatCard bmzCatCard--link" role="group" aria-label={c.title}>
                     {cardInner}
-                  </Link>
+                  </div>
                 )
               })}
             </div>
@@ -449,7 +435,6 @@ export default function HomePage({ homeEditMode = false }) {
             <HomeHit path="industries.title" label="Заголовок «Отрасли»" multiline as="div" className="bmzSectionTitle">
               {content.industries?.title}
             </HomeHit>
-
             <div className="bmzIndustriesGrid">
               {(content.industries?.items || []).map((i, ii) => (
                 <div
@@ -505,8 +490,17 @@ export default function HomePage({ homeEditMode = false }) {
             <form
               onSubmit={(e) => {
                 e.preventDefault()
-                // No backend in this template; just show a success state.
-                setFormStatus('sent')
+                const lines = ['Здравствуйте! Хочу получить расчёт стоимости.']
+                if (form.type) lines.push(`Тип: ${form.type}`)
+                if (form.capacity) lines.push(`Грузоподъёмность: ${form.capacity}`)
+                if (form.phone) lines.push(`Контакт: ${form.phone}`)
+                const message = lines.join('\n')
+                const url = buildWhatsAppKpUrl(message, waDigits)
+                if (url) {
+                  window.open(url, '_blank', 'noopener,noreferrer')
+                } else {
+                  setFormStatus('sent')
+                }
               }}
             >
               <div className="bmzLeadGrid">
@@ -526,7 +520,6 @@ export default function HomePage({ homeEditMode = false }) {
                     </select>
                   </div>
                 </div>
-
                 <div>
                   <div className="bmzFieldLabel">Грузоподъемность</div>
                   <div className="bmzField">
@@ -538,7 +531,6 @@ export default function HomePage({ homeEditMode = false }) {
                     />
                   </div>
                 </div>
-
                 <div>
                   <div className="bmzFieldLabel">Контактный телефон</div>
                   <div className="bmzField">
@@ -550,7 +542,6 @@ export default function HomePage({ homeEditMode = false }) {
                     />
                   </div>
                 </div>
-
                 <button className="bmzLeadBtn" type="submit">
                   Отправить заявку
                 </button>
@@ -582,18 +573,11 @@ export default function HomePage({ homeEditMode = false }) {
             <HomeHit path="portfolio.title" label="Заголовок портфолио" multiline as="div" className="bmzSectionTitle">
               {content.portfolio?.title}
             </HomeHit>
-
             <div className="bmzPortfolioGrid">
               {portfolioItems.map((p, pi) => (
                 <div key={`${p.title}-${pi}`} className="bmzProjCard">
                   {homeEditMode ? (
-                    <HomeHit
-                      path={`portfolio.items.${pi}.image`}
-                      label={`Портфолио ${pi + 1}: URL фото`}
-                      multiline={false}
-                      as="div"
-                      className="bmzProjImgWrap bmzProjImgWrap--hit"
-                    >
+                    <HomeHit path={`portfolio.items.${pi}.image`} label={`Портфолио ${pi + 1}: URL фото`} multiline={false} as="div" className="bmzProjImgWrap bmzProjImgWrap--hit">
                       {p.image ? (
                         <img src={p.image} alt="" className="bmzProjImgPhoto" loading="lazy" decoding="async" />
                       ) : (
@@ -632,7 +616,6 @@ export default function HomePage({ homeEditMode = false }) {
             <HomeHit path="trust.title" label="Заголовок «Доверие»" multiline as="div" className="bmzSectionTitle">
               {content.trust?.title}
             </HomeHit>
-
             <div className="bmzTrustGrid">
               {(content.trust?.items || []).map((t, ti) => (
                 <div key={t.title} className="bmzTrustCard">
@@ -657,7 +640,6 @@ export default function HomePage({ homeEditMode = false }) {
             <HomeHit path="about.title" label="Заголовок «О компании»" multiline as="div" className="bmzSectionTitle">
               {content.about?.title}
             </HomeHit>
-
             <div className="bmzGrid2">
               {(content.about?.items || []).map((a, ai) => (
                 <div key={a.title} className="bmzInfoCard">
@@ -674,51 +656,17 @@ export default function HomePage({ homeEditMode = false }) {
         </section>
 
         {/* CTA */}
-        <section
-          className="bmzBlock"
-          style={{
-            marginTop: 0,
-            background: 'linear-gradient(135deg, var(--blue) 0%, var(--blue2) 100%)',
-            color: '#fff',
-          }}
-        >
-          <div
-            className="bmzBlockInner"
-            style={{
-              textAlign: 'center',
-              paddingTop: 'clamp(22px, 4vw, 42px)',
-              paddingBottom: 'clamp(22px, 4vw, 42px)',
-            }}
-          >
-            <HomeHit
-              path="bottomCta.title"
-              label="Нижний блок: заголовок"
-              multiline
-              as="div"
-              style={{ fontFamily: 'Unbounded, Inter, sans-serif', fontWeight: 900, fontSize: 'clamp(18px, 3vw, 22px)', marginBottom: 8 }}
-            >
+        <section className="bmzBlock" style={{ marginTop: 0, background: 'linear-gradient(135deg, var(--blue) 0%, var(--blue2) 100%)', color: '#fff' }}>
+          <div className="bmzBlockInner" style={{ textAlign: 'center', paddingTop: 'clamp(22px, 4vw, 42px)', paddingBottom: 'clamp(22px, 4vw, 42px)' }}>
+            <HomeHit path="bottomCta.title" label="Нижний блок: заголовок" multiline as="div" style={{ fontFamily: 'Unbounded, Inter, sans-serif', fontWeight: 900, fontSize: 'clamp(18px, 3vw, 22px)', marginBottom: 8 }}>
               {content.bottomCta?.title}
             </HomeHit>
-            <HomeHit
-              path="bottomCta.subtitle"
-              label="Нижний блок: подзаголовок"
-              multiline
-              as="div"
-              style={{ color: 'rgba(144,202,249,0.95)', fontSize: 'clamp(13px, 1.8vw, 15px)', marginBottom: 18 }}
-            >
+            <HomeHit path="bottomCta.subtitle" label="Нижний блок: подзаголовок" multiline as="div" style={{ color: 'rgba(144,202,249,0.95)', fontSize: 'clamp(13px, 1.8vw, 15px)', marginBottom: 18 }}>
               {content.bottomCta?.subtitle}
             </HomeHit>
-
             <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
               {homeEditMode ? (
-                <HomeHit
-                  path="bottomCta.primaryBtn"
-                  label="Нижний блок: кнопка 1"
-                  multiline={false}
-                  as="button"
-                  type="button"
-                  className="bmzBtnPrimary"
-                >
+                <HomeHit path="bottomCta.primaryBtn" label="Нижний блок: кнопка 1" multiline={false} as="button" type="button" className="bmzBtnPrimary">
                   {content.bottomCta?.primaryBtn}
                 </HomeHit>
               ) : (
@@ -727,14 +675,7 @@ export default function HomePage({ homeEditMode = false }) {
                 </button>
               )}
               {homeEditMode ? (
-                <HomeHit
-                  path="bottomCta.secondaryBtn"
-                  label="Нижний блок: кнопка 2"
-                  multiline={false}
-                  as="button"
-                  type="button"
-                  className="bmzBtnGhost"
-                >
+                <HomeHit path="bottomCta.secondaryBtn" label="Нижний блок: кнопка 2" multiline={false} as="button" type="button" className="bmzBtnGhost">
                   {content.bottomCta?.secondaryBtn}
                 </HomeHit>
               ) : (
@@ -762,24 +703,33 @@ export default function HomePage({ homeEditMode = false }) {
               </div>
 
               <div>
-                <HomeHit path="footer.col2Title" label="Подвал: колонка 2 заголовок" multiline as="div" className="bmzFooterColTitle">
-                  {content.footer?.col2Title}
-                </HomeHit>
-                <div className="bmzFooterColText">
-                  <HomeHit path="footer.col2Text" label="Подвал: колонка 2 текст" multiline as="div">
-                    <MultilineText text={content.footer?.col2Text} />
-                  </HomeHit>
+                <div className="bmzFooterColTitle">Продукция</div>
+                <div className="bmzFooterColLinks">
+                  <Link to="/products/c/avtomobilnye-vesy" className="bmzFooterLink">Автомобильные весы</Link>
+                  <Link to="/products/c/zheleznodorozhnye-vesy" className="bmzFooterLink">Железнодорожные весы</Link>
                 </div>
               </div>
 
               <div>
-                <HomeHit path="footer.col3Title" label="Подвал: колонка 3 заголовок" multiline as="div" className="bmzFooterColTitle">
-                  {content.footer?.col3Title}
-                </HomeHit>
-                <div className="bmzFooterColText">
-                  <HomeHit path="footer.col3Text" label="Подвал: колонка 3 текст" multiline as="div">
-                    <MultilineText text={content.footer?.col3Text} />
-                  </HomeHit>
+                <div className="bmzFooterColTitle">Услуги</div>
+                <div className="bmzFooterColLinks">
+                  {[
+                    'Монтаж и ПНР',
+                    'Калибровка и поверка',
+                    'Модернизация',
+                    'Ремонт',
+                    'Сервисное обслуживание',
+                  ].map((service) => {
+                    const msg = `Здравствуйте! Интересует услуга: ${service}.`
+                    const waUrl = buildWhatsAppKpUrl(msg, waDigits)
+                    return waUrl ? (
+                      <a key={service} href={waUrl} target="_blank" rel="noopener noreferrer" className="bmzFooterLink bmzFooterLink--wa">
+                        {service}
+                      </a>
+                    ) : (
+                      <span key={service} className="bmzFooterLink">{service}</span>
+                    )
+                  })}
                 </div>
               </div>
 
@@ -801,6 +751,12 @@ export default function HomePage({ homeEditMode = false }) {
           </div>
         </footer>
       </div>
+
+      <CatalogRequestModal
+        open={reqModal.open}
+        onClose={() => setReqModal({ open: false, type: '' })}
+        defaultType={reqModal.type}
+      />
     </>
   )
 
@@ -820,4 +776,3 @@ export default function HomePage({ homeEditMode = false }) {
 
   return pageBody
 }
-

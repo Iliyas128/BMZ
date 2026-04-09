@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import BmzBreadcrumb from '../../components/BmzBreadcrumb'
 import BmzSpinner from '../../components/BmzSpinner'
 import { API_BASE_URL } from '../../api/config'
-import { filterFixedCategories } from '../../utils/catalogCategoryOrder'
+import { filterAvailableCatalogCategories } from '../../utils/catalogCategoryOrder'
 
 const scrollTop = () => window.scrollTo({ top: 0, behavior: 'smooth' })
 
@@ -23,7 +23,7 @@ export default function CatalogHome() {
     fetch(`${API_BASE_URL}/api/catalog/categories`)
       .then((r) => (r.ok ? r.json() : []))
       .then((data) => {
-        if (ok && Array.isArray(data)) setCategories(filterFixedCategories(data))
+        if (ok && Array.isArray(data)) setCategories(filterAvailableCatalogCategories(data))
       })
       .catch(() => {})
       .finally(() => ok && setLoading(false))

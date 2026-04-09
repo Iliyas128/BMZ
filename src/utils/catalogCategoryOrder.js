@@ -8,6 +8,11 @@ export const FIXED_CATEGORY_SLUGS = [
   'uslugi',
 ]
 
+const AVAILABLE_CATALOG_CATEGORY_SLUGS = [
+  'avtomobilnye-vesy',
+  'zheleznodorozhnye-vesy',
+]
+
 export function sortCategoriesFixed(categories) {
   if (!Array.isArray(categories)) return []
   const order = new Map(FIXED_CATEGORY_SLUGS.map((slug, i) => [slug, i]))
@@ -21,5 +26,10 @@ export function sortCategoriesFixed(categories) {
 
 export function filterFixedCategories(categories) {
   const set = new Set(FIXED_CATEGORY_SLUGS)
+  return sortCategoriesFixed((categories || []).filter((c) => c?.slug && set.has(c.slug)))
+}
+
+export function filterAvailableCatalogCategories(categories) {
+  const set = new Set(AVAILABLE_CATALOG_CATEGORY_SLUGS)
   return sortCategoriesFixed((categories || []).filter((c) => c?.slug && set.has(c.slug)))
 }
