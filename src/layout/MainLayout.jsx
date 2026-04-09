@@ -15,8 +15,42 @@ export default function MainLayout() {
 
   const navLinks = useMemo(
     () => [
-      { key: 'products', label: 'Автовесы', to: '/products/c/avtomobilnye-vesy' },
-      { key: 'equipment', label: 'Оборудование', to: '/products/c/oborudovanie' },
+      {
+        key: 'products',
+        label: 'Автовесы',
+        onClick: () =>
+          isHome ? scrollToId('home-categories') : navigate('/', { state: { scrollTo: 'home-categories' } }),
+      },
+      {
+        key: 'equipment',
+        label: 'Оборудование',
+        onClick: () =>
+          isHome ? scrollToId('home-categories') : navigate('/', { state: { scrollTo: 'home-categories' } }),
+      },
+      {
+        key: 'railway',
+        label: 'Железнодорожные весы',
+        onClick: () =>
+          isHome ? scrollToId('home-categories') : navigate('/', { state: { scrollTo: 'home-categories' } }),
+      },
+      {
+        key: 'foundation',
+        label: 'Фундамент',
+        onClick: () =>
+          isHome ? scrollToId('home-categories') : navigate('/', { state: { scrollTo: 'home-categories' } }),
+      },
+      {
+        key: 'automation',
+        label: 'Автоматизация',
+        onClick: () =>
+          isHome ? scrollToId('home-categories') : navigate('/', { state: { scrollTo: 'home-categories' } }),
+      },
+      {
+        key: 'services',
+        label: 'Услуги',
+        onClick: () =>
+          isHome ? scrollToId('home-categories') : navigate('/', { state: { scrollTo: 'home-categories' } }),
+      },
       {
         key: 'about',
         label: 'О нас',
