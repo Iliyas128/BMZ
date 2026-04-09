@@ -58,6 +58,23 @@ const fallbackCategoryCards = [
     btn: 'Открыть',
   },
   {
+    key: 'equipment',
+    slug: 'oborudovanie',
+    tone: 'green',
+    icon: 'ОБ',
+    badge: 'комплект',
+    image: '/images/oborudovanie.png',
+    title: 'Оборудование',
+    desc: 'Тензодатчики, индикаторы и компоненты для разных условий эксплуатации.',
+    pills: [
+      ['Тензодатчики', 'blue'],
+      ['Индикаторы', 'blue'],
+      ['Крановые и платформенные весы', 'blue'],
+      ['Весы для животных', 'blue'],
+    ],
+    btn: 'Узнать цену',
+  },
+  {
     key: 'rail',
     slug: 'zheleznodorozhnye-vesy',
     tone: 'blue',
@@ -102,23 +119,6 @@ const fallbackCategoryCards = [
       ['IP-камеры и распознавание', 'blue'],
       ['Telegram / Email', 'blue'],
       ['Синхронизация с 1С', 'blue'],
-    ],
-    btn: 'Узнать цену',
-  },
-  {
-    key: 'equipment',
-    slug: 'oborudovanie',
-    tone: 'green',
-    icon: 'ОБ',
-    badge: 'комплект',
-    image: '/images/oborudovanie.png',
-    title: 'Оборудование',
-    desc: 'Тензодатчики, индикаторы и компоненты для разных условий эксплуатации.',
-    pills: [
-      ['Тензодатчики', 'blue'],
-      ['Индикаторы', 'blue'],
-      ['Крановые и платформенные весы', 'blue'],
-      ['Весы для животных', 'blue'],
     ],
     btn: 'Узнать цену',
   },
@@ -378,32 +378,33 @@ export default function HomePage({ homeEditMode = false }) {
                       </div>
                       <div className="bmzCatBodyFill" aria-hidden="true" />
                       <div className="bmzCatBtnRow">
-                        {(c.slug === 'avtomobilnye-vesy' || c.slug === 'zheleznodorozhnye-vesy') ? (
+                        {(c.slug === 'avtomobilnye-vesy' || c.slug === 'oborudovanie') ? (
                           <Link
                             to={c.slug ? `/products/c/${c.slug}` : '/products'}
                             className={[
-                              'bmzCatBtn bmzCatBtn--outline',
-                              c.tone === 'green' ? 'bmzCatBtn--outlineGreen' : c.tone === 'orange' ? 'bmzCatBtn--outlineOrange' : 'bmzCatBtn--outlineBlue',
+                              'bmzCatBtn',
+                              c.tone === 'green' ? 'bmzCatBtn--green' : c.tone === 'orange' ? 'bmzCatBtn--orange' : 'bmzCatBtn--blue',
                             ].join(' ')}
                             onClick={(e) => e.stopPropagation()}
                           >
-                            Каталог →
+                            Открыть →
                           </Link>
-                        ) : null}
-                        <button
-                          type="button"
-                          className={[
-                            'bmzCatBtn',
-                            c.tone === 'green' ? 'bmzCatBtn--green' : c.tone === 'orange' ? 'bmzCatBtn--orange' : 'bmzCatBtn--blue',
-                          ].join(' ')}
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            e.preventDefault()
-                            setReqModal({ open: true, type: c.title })
-                          }}
-                        >
-                          Узнать цену
-                        </button>
+                        ) : (
+                          <button
+                            type="button"
+                            className={[
+                              'bmzCatBtn',
+                              c.tone === 'green' ? 'bmzCatBtn--green' : c.tone === 'orange' ? 'bmzCatBtn--orange' : 'bmzCatBtn--blue',
+                            ].join(' ')}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              e.preventDefault()
+                              setReqModal({ open: true, type: c.title })
+                            }}
+                          >
+                            Узнать цену
+                          </button>
+                        )}
                       </div>
                     </div>
                   </>

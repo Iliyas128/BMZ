@@ -3,11 +3,9 @@ import { buildWhatsAppKpUrl } from '../api/config'
 import { useWhatsappDigits } from '../hooks/useWhatsappDigits'
 
 const WEIGHT_TYPES = [
-  'Автомобильные весы',
   'Железнодорожные весы',
   'Фундамент и монтаж',
   'Автоматизация',
-  'Оборудование',
   'Сервис и ремонт',
 ]
 
@@ -126,25 +124,29 @@ export default function CatalogRequestModal({ open, onClose, defaultType }) {
               )}
             </div>
 
-            <div className="bmzReqField">
-              <label className="bmzFieldLabel">Грузоподъёмность</label>
-              <input
-                className="bmzInput bmzReqInput"
-                placeholder="Например: 60 т, 80 т, 120 т"
-                value={form.capacity}
-                onChange={(e) => setForm((f) => ({ ...f, capacity: e.target.value }))}
-              />
-            </div>
+            {form.type === 'Железнодорожные весы' ? (
+              <div className="bmzReqField">
+                <label className="bmzFieldLabel">Грузоподъёмность</label>
+                <input
+                  className="bmzInput bmzReqInput"
+                  placeholder="Например: 60 т, 80 т, 120 т"
+                  value={form.capacity}
+                  onChange={(e) => setForm((f) => ({ ...f, capacity: e.target.value }))}
+                />
+              </div>
+            ) : null}
 
-            <div className="bmzReqField">
-              <label className="bmzFieldLabel">Размер платформы</label>
-              <input
-                className="bmzInput bmzReqInput"
-                placeholder="Например: 18×3 м"
-                value={form.platform}
-                onChange={(e) => setForm((f) => ({ ...f, platform: e.target.value }))}
-              />
-            </div>
+            {form.type !== 'Автоматизация' ? (
+              <div className="bmzReqField">
+                <label className="bmzFieldLabel">Размер платформы</label>
+                <input
+                  className="bmzInput bmzReqInput"
+                  placeholder="Например: 18×3 м"
+                  value={form.platform}
+                  onChange={(e) => setForm((f) => ({ ...f, platform: e.target.value }))}
+                />
+              </div>
+            ) : null}
 
             <div className="bmzReqField">
               <label className="bmzFieldLabel">Назначение / объект</label>
@@ -160,7 +162,7 @@ export default function CatalogRequestModal({ open, onClose, defaultType }) {
               <button type="button" className="bmzBackBtn" style={{ flex: 1 }} onClick={onClose}>
                 Отмена
               </button>
-              <button type="button" className="bmzBtnPrimary" style={{ flex: 2 }} onClick={() => setStep(2)}>
+              <button type="button" className="bmzBtnPrimary" style={{ flex: 1 }} onClick={() => setStep(2)}>
                 Далее →
               </button>
             </div>
@@ -189,7 +191,7 @@ export default function CatalogRequestModal({ open, onClose, defaultType }) {
               <button type="button" className="bmzBackBtn" style={{ flex: 1 }} onClick={() => setStep(1)}>
                 ← Назад
               </button>
-              <button type="button" className="bmzWaBtn" style={{ flex: 2 }} onClick={handleSend}>
+              <button type="button" className="bmzWaBtn" style={{ flex: 1 }} onClick={handleSend}>
                 <WaIcon />
                 Написать в WhatsApp
               </button>

@@ -10,7 +10,7 @@ export const FIXED_CATEGORY_SLUGS = [
 
 const AVAILABLE_CATALOG_CATEGORY_SLUGS = [
   'avtomobilnye-vesy',
-  'zheleznodorozhnye-vesy',
+  'oborudovanie',
 ]
 
 export function sortCategoriesFixed(categories) {

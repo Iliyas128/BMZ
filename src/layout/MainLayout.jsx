@@ -16,7 +16,7 @@ export default function MainLayout() {
   const navLinks = useMemo(
     () => [
       { key: 'products', label: 'Автовесы', to: '/products/c/avtomobilnye-vesy' },
-      { key: 'rail', label: 'ЖД весы', to: '/products/c/zheleznodorozhnye-vesy' },
+      { key: 'equipment', label: 'Оборудование', to: '/products/c/oborudovanie' },
       {
         key: 'about',
         label: 'О нас',

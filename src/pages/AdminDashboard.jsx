@@ -34,7 +34,7 @@ const emptyProduct = {
   imagesUrls: '',
 }
 
-const AVAILABLE_ADMIN_CATEGORY_SLUGS = new Set(['avtomobilnye-vesy', 'zheleznodorozhnye-vesy'])
+const AVAILABLE_ADMIN_CATEGORY_SLUGS = new Set(['avtomobilnye-vesy', 'oborudovanie'])
 
 function parseImagesUrls(text) {
   return String(text || '')
@@ -446,7 +446,7 @@ export default function AdminDashboard() {
           <section className="bmzAdminSection">
             <h2 className="bmzAdminH2">Подкатегории и товары</h2>
             <p className="bmzGrayText" style={{ marginBottom: 16, maxWidth: 800 }}>
-              В админке видны только два направления. Таблица ниже: подкатегории и товары для этих направлений. Добавление и правка открываются в
+              В админке видны два направления. Таблица ниже: подкатегории и товары для этих направлений. Добавление и правка открываются в
               оно меньше, тем выше строка в списке на сайте (0 — первым).
             </p>
 
