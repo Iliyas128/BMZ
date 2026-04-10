@@ -5,6 +5,7 @@ import { apiFetch } from '../api/client'
 import { useToast } from '../context/ToastContext'
 import BmzSpinner from '../components/BmzSpinner'
 import { sortCategoriesFixed } from '../utils/catalogCategoryOrder'
+import { parseHighlightsFormText, specsHighlightsToFormText } from '../utils/productSpecs'
 
 const emptySub = {
   category: '',
@@ -23,7 +24,6 @@ const emptyProduct = {
   name: '',
   slug: '',
   sku: '',
-  shortDescription: '',
   description: '',
   price: 0,
   currency: 'KZT',
@@ -32,6 +32,7 @@ const emptyProduct = {
   inStock: true,
   order: 0,
   imagesUrls: '',
+  specsHighlightsText: '',
 }
 
 const AVAILABLE_ADMIN_CATEGORY_SLUGS = new Set(['avtomobilnye-vesy', 'oborudovanie'])
@@ -251,13 +252,24 @@ export default function AdminDashboard() {
     saveLock.current = true
     const images = parseImagesUrls(productForm.imagesUrls)
 
+    const highlights = parseHighlightsFormText(productForm.specsHighlightsText)
+    const prevProduct = editingProductId
+      ? products.find((p) => String(p._id) === String(editingProductId))
+      : null
+    const prevSpecs =
+      prevProduct?.specs && typeof prevProduct.specs === 'object' ? { ...prevProduct.specs } : {}
+    const specs = { ...prevSpecs, highlights }
+    delete specs.cap
+    delete specs.platform
+    delete specs.sensors
+
     const body = {
       category: productForm.category,
       subcategory: productForm.subcategory,
       name: productForm.name.trim(),
       slug: productForm.slug?.trim() || undefined,
       sku: productForm.sku || '',
-      shortDescription: productForm.shortDescription || '',
+      shortDescription: '',
       description: productForm.description || '',
       price: Number(productForm.price) || 0,
       currency: productForm.currency || 'KZT',
@@ -266,6 +278,7 @@ export default function AdminDashboard() {
       inStock: !!productForm.inStock,
       order: Number(productForm.order) || 0,
       images,
+      specs,
     }
 
     const url = editingProductId ? `/api/admin/products/${editingProductId}` : '/api/admin/products'
@@ -316,7 +329,6 @@ export default function AdminDashboard() {
       name: row.name || '',
       slug: row.slug || '',
       sku: row.sku || '',
-      shortDescription: row.shortDescription || '',
       description: row.description || '',
       price: row.price ?? 0,
       currency: row.currency || 'KZT',
@@ -325,6 +337,7 @@ export default function AdminDashboard() {
       inStock: row.inStock !== false,
       order: row.order ?? 0,
       imagesUrls: Array.isArray(row.images) ? row.images.join('\n') : '',
+      specsHighlightsText: specsHighlightsToFormText(row.specs),
     })
     setCatalogFormOpen(true)
   }
@@ -648,24 +661,33 @@ export default function AdminDashboard() {
                               </span>
                             </label>
                             <label className="bmzAdminLabel">
-                              Краткое описание
+                              Описание
                               <textarea
                                 className="bmzInput bmzAdminTextarea"
-                                rows={2}
-                                value={productForm.shortDescription}
-                                onChange={(e) => setProductForm((f) => ({ ...f, shortDescription: e.target.value }))}
-                                placeholder="Например:\nСтандартные весы\n40 тонн"
-                              />
-                              <span className="bmzAdminFieldHint">Можно вводить с переносами строк — на карточке сохранится формат.</span>
-                            </label>
-                            <label className="bmzAdminLabel">
-                              Полное описание
-                              <textarea
-                                className="bmzInput bmzAdminTextarea"
-                                rows={3}
+                                rows={6}
                                 value={productForm.description}
                                 onChange={(e) => setProductForm((f) => ({ ...f, description: e.target.value }))}
+                                placeholder="Несколько абзацев и списков — переносы строк сохраняются на сайте."
                               />
+                              <span className="bmzAdminFieldHint">
+                                На карточке каталога и в окне «Получить КП» — один и тот же текст, с переносами строк.
+                              </span>
+                            </label>
+                            <label className="bmzAdminLabel">
+                              Параметры в карточке товара
+                              <textarea
+                                className="bmzInput bmzAdminTextarea"
+                                rows={4}
+                                value={productForm.specsHighlightsText}
+                                onChange={(e) => setProductForm((f) => ({ ...f, specsHighlightsText: e.target.value }))}
+                                placeholder={
+                                  'Грузоподъёмность: 40 т\nПлатформа: 12 × 3 м\nДатчики: 6 шт. IP68'
+                                }
+                              />
+                              <span className="bmzAdminFieldHint">
+                                Каждая строка — «название: значение» (двоеточие после названия). Любые подписи, не только
+                                грузоподъёмность и платформа.
+                              </span>
                             </label>
                             <label className="bmzAdminLabel">
                               Фото товара (URL, по одному в строке)

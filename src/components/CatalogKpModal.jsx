@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { buildWhatsAppKpUrl } from '../api/config'
 import { useWhatsappDigits } from '../hooks/useWhatsappDigits'
 import BmzSpinner from './BmzSpinner'
+import { getSpecHighlightRows } from '../utils/productSpecs'
 
 function buildMessage(productName, categoryName, subName) {
   const lines = [
@@ -37,6 +38,9 @@ export default function CatalogKpModal({ open, onClose, product, categoryName, s
 
   if (!open || !product) return null
 
+  const specRows = getSpecHighlightRows(product.specs)
+  const descText = String(product.description || '').trim()
+
   return (
     <div
       className="bmzKpModalBackdrop"
@@ -63,6 +67,25 @@ export default function CatalogKpModal({ open, onClose, product, categoryName, s
           По товару <strong>{product.name}</strong> мы подготовим предложение. В WhatsApp уже подставлено название
           позиции — останется отправить сообщение.
         </p>
+        {descText ? (
+          <div className="bmzKpModalBlock">
+            <div className="bmzKpModalBlockTitle">Описание</div>
+            <div className="bmzKpModalDesc">{descText}</div>
+          </div>
+        ) : null}
+        {specRows.length ? (
+          <div className="bmzKpModalBlock">
+            <div className="bmzKpModalBlockTitle">Параметры</div>
+            <div className="bmzKpModalSpecs">
+              {specRows.map((row, idx) => (
+                <div key={idx} className="bmzKpModalSpecRow">
+                  <span className="bmzKpModalSpecLabel">{row.label}</span>
+                  <span className="bmzKpModalSpecValue">{row.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
         {!ready ? <BmzSpinner label="Проверяем настройки…" variant="inline" /> : null}
         {ready && hasWa && waUrl ? (
           <a href={waUrl} target="_blank" rel="noopener noreferrer" className="bmzKpModalWa">

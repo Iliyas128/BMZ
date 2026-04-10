@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import BmzBreadcrumb from '../../components/BmzBreadcrumb'
 import BmzSpinner from '../../components/BmzSpinner'
 import CatalogKpModal from '../../components/CatalogKpModal'
 import { productAccentClass } from '../../utils/catalogAccent'
+import { getSpecHighlightRows } from '../../utils/productSpecs'
 import { API_BASE_URL } from '../../api/config'
 
 const scrollTop = () => window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -12,6 +13,66 @@ function formatPrice(price, currency) {
   const n = Number(price)
   if (!Number.isFinite(n)) return '—'
   return `от ${n.toLocaleString('ru-RU')} ${currency || '₸'}`
+}
+
+function ProdCardGallery({ urls }) {
+  const [idx, setIdx] = useState(0)
+  const n = urls.length
+  const sig = urls.join('\n')
+
+  useEffect(() => {
+    setIdx(0)
+  }, [sig])
+
+  const goPrev = useCallback((e) => {
+    e.stopPropagation()
+    setIdx((i) => (i - 1 + n) % n)
+  }, [n])
+
+  const goNext = useCallback((e) => {
+    e.stopPropagation()
+    setIdx((i) => (i + 1) % n)
+  }, [n])
+
+  if (!n) return <div className="bmzProdIcon">BMZ</div>
+
+  return (
+    <div className="bmzProdImgGallery">
+      <img
+        src={urls[idx]}
+        alt=""
+        className="bmzProdImgPhoto"
+        loading={idx === 0 ? 'eager' : 'lazy'}
+        decoding="async"
+      />
+      {n > 1 ? (
+        <>
+          <button type="button" className="bmzProdImgNav bmzProdImgNav--prev" onClick={goPrev} aria-label="Предыдущее фото">
+            <svg className="bmzProdImgNavIcon" viewBox="0 0 24 24" fill="none" aria-hidden>
+              <path
+                d="M14 6L8 12l6 6"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+          <button type="button" className="bmzProdImgNav bmzProdImgNav--next" onClick={goNext} aria-label="Следующее фото">
+            <svg className="bmzProdImgNavIcon" viewBox="0 0 24 24" fill="none" aria-hidden>
+              <path
+                d="M10 6l6 6-6 6"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+        </>
+      ) : null}
+    </div>
+  )
 }
 
 export default function CatalogSubcategory() {
@@ -88,7 +149,9 @@ export default function CatalogSubcategory() {
       <section className="bmzPageHeader">
         <div className="bmz-container bmzPageHeaderInner">
           <div className="bmzPageHeaderH1">{data?.name || '…'}</div>
-          <div className="bmzPageHeaderP">{data?.description || 'Выберите модель.'}</div>
+          <div className="bmzPageHeaderP bmzPageHeaderP--preline">
+            {data?.description || 'Выберите модель.'}
+          </div>
         </div>
       </section>
 
@@ -104,8 +167,9 @@ export default function CatalogSubcategory() {
 
           <div className="bmzCatalogAutoGrid bmzCatalogAutoGrid--products">
             {products.map((p) => {
-              const dim = p.specs?.dim || '—'
               const ac = productAccentClass(p.accent)
+              const specRows = getSpecHighlightRows(p.specs)
+              const imgUrls = Array.isArray(p.images) ? p.images.map((u) => String(u || '').trim()).filter(Boolean) : []
               return (
                 <div
                   key={p._id || p.slug}
@@ -128,36 +192,19 @@ export default function CatalogSubcategory() {
                       ac === 'heavy' ? 'bmzProdImg--heavy' : '',
                     ].join(' ')}
                   >
-                    {Array.isArray(p.images) && p.images[0] ? (
-                      <img src={p.images[0]} alt="" className="bmzProdImgPhoto" loading="lazy" decoding="async" />
-                    ) : (
-                      <div className="bmzProdIcon">BMZ</div>
-                    )}
-                    <div className="bmzProdDimBadge">{dim}</div>
+                    <ProdCardGallery urls={imgUrls} />
                   </div>
                   <div className="bmzProdCardBody bmzProdCardBody--uniform">
                     <div className="bmzProdCardGrow">
                       <div className="bmzProdTitle">{p.name}</div>
-                      <div className="bmzProdSub">{p.shortDescription || p.description?.slice(0, 120)}</div>
+                      <div className="bmzProdSub">{p.description || ''}</div>
                       <div className="bmzProdSpecs bmzProdSpecs--fixedMin">
-                        {p.specs?.cap ? (
-                          <div className="bmzSpecRow">
-                            <span className="bmzSpecLabel">Грузоподъёмность</span>
-                            <span className="bmzSpecValue">{p.specs.cap}</span>
+                        {specRows.map((row, idx) => (
+                          <div key={`${p.slug || p._id}-${idx}`} className="bmzSpecRow">
+                            <span className="bmzSpecLabel">{row.label}</span>
+                            <span className="bmzSpecValue">{row.value}</span>
                           </div>
-                        ) : null}
-                        {p.specs?.platform ? (
-                          <div className="bmzSpecRow">
-                            <span className="bmzSpecLabel">Платформа</span>
-                            <span className="bmzSpecValue">{p.specs.platform}</span>
-                          </div>
-                        ) : null}
-                        {p.specs?.sensors ? (
-                          <div className="bmzSpecRow">
-                            <span className="bmzSpecLabel">Датчики</span>
-                            <span className="bmzSpecValue">{p.specs.sensors}</span>
-                          </div>
-                        ) : null}
+                        ))}
                       </div>
                     </div>
                     <div className="bmzProdCardFooter">
