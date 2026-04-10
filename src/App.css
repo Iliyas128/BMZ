@@ -62,9 +62,18 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  padding-left: 0;
+  padding: 4px 0;
   flex: 0 1 auto;
   min-width: 0;
+}
+
+.bmzLogoImg {
+  display: block;
+  height: clamp(26px, 3.2vw + 14px, 44px);
+  width: auto;
+  max-width: min(200px, 46vw);
+  object-fit: contain;
+  object-position: left center;
 }
 
 .bmzLogoMark {
@@ -411,7 +420,7 @@ a.bmzMobileLinkBtn:hover {
 
 .bmzBlockProducts .bmzCatTop,
 .bmzCatalogPage .bmzCatTop {
-  height: clamp(168px, 26vh, 300px);
+  height: clamp(168px, 34vh, 480px);
   padding: 18px;
   border-radius: 20px 20px 0 0;
 }
@@ -481,15 +490,40 @@ a.bmzMobileLinkBtn:hover {
   padding: 20px;
 }
 
+.bmzCatalogPage .bmzProdCard {
+  min-width: 0;
+}
+
+.bmzCatalogPage .bmzProdCardGrow {
+  min-width: 0;
+}
+
 .bmzCatalogPage .bmzProdTitle {
   font-size: 15px;
   margin-bottom: 10px;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  max-width: 100%;
 }
 
 .bmzCatalogPage .bmzProdSub {
   margin-bottom: 14px;
   line-height: 1.55;
   white-space: pre-line;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  max-width: 100%;
+}
+
+.bmzCatalogPage .bmzSpecRow {
+  align-items: flex-start;
+}
+
+.bmzCatalogPage .bmzSpecLabel,
+.bmzCatalogPage .bmzSpecValue {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .bmzCatalogPage .bmzProdSpecs {
@@ -512,6 +546,29 @@ a.bmzMobileLinkBtn:hover {
 
 .bmzCatalogPage .bmzSpinnerWrap--page {
   margin-bottom: clamp(12px, 2.5vw, 22px);
+}
+
+/* Оборудование: белый фон только у блока фото карточки (.bmzProdImg), не у всей карточки */
+.bmzCatalogPage--equipment .bmzProdImg,
+.bmzCatalogPage--equipment .bmzProdImg.bmzProdImg--agro,
+.bmzCatalogPage--equipment .bmzProdImg.bmzProdImg--heavy {
+  background: #fff;
+}
+
+.bmzCatalogPage--equipment .bmzProdImgGallery .bmzProdImgPhoto {
+  object-fit: contain;
+  object-position: center;
+}
+
+.bmzCatalogPage--equipment .bmzProdImgNav {
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  box-shadow: 0 2px 14px rgba(15, 23, 42, 0.12);
+}
+
+.bmzCatalogPage--equipment .bmzProdIcon--equipment {
+  background: rgba(13, 61, 110, 0.06);
+  border-color: rgba(13, 61, 110, 0.12);
+  color: var(--blue2);
 }
 
 .bmzBlockInner {
@@ -779,7 +836,7 @@ a.bmzMobileLinkBtn:hover {
 }
 
 .bmzCatTop {
-  height: clamp(172px, 35vh, 480px);
+  height: clamp(172px, 35vh, 500px);
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -1303,6 +1360,8 @@ a.bmzMobileLinkBtn:hover {
 
 .bmzPageHeaderP--preline {
   white-space: pre-line;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .bmzPageContent {
@@ -1638,6 +1697,9 @@ a.bmzMobileLinkBtn:hover {
   line-height: 1.55;
   color: var(--dark);
   white-space: pre-line;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  max-width: 100%;
 }
 
 .bmzKpModalSpecs {
@@ -1649,6 +1711,7 @@ a.bmzMobileLinkBtn:hover {
 .bmzKpModalSpecRow {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
   gap: 12px;
   font-size: 12.5px;
 }
@@ -1656,12 +1719,18 @@ a.bmzMobileLinkBtn:hover {
 .bmzKpModalSpecLabel {
   color: var(--gray);
   flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .bmzKpModalSpecValue {
   font-weight: 800;
   color: var(--dark);
   text-align: right;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .bmzKpModalWa {

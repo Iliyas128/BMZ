@@ -3,9 +3,11 @@ import { useNavigate, useParams } from 'react-router-dom'
 import BmzBreadcrumb from '../../components/BmzBreadcrumb'
 import BmzSpinner from '../../components/BmzSpinner'
 import CatalogKpModal from '../../components/CatalogKpModal'
+import { API_BASE_URL } from '../../api/config'
 import { productAccentClass } from '../../utils/catalogAccent'
 import { getSpecHighlightRows } from '../../utils/productSpecs'
-import { API_BASE_URL } from '../../api/config'
+
+const EQUIPMENT_CATEGORY_SLUG = 'oborudovanie'
 
 const scrollTop = () => window.scrollTo({ top: 0, behavior: 'smooth' })
 
@@ -15,7 +17,7 @@ function formatPrice(price, currency) {
   return `от ${n.toLocaleString('ru-RU')} ${currency || '₸'}`
 }
 
-function ProdCardGallery({ urls }) {
+function ProdCardGallery({ urls, equipmentLayout }) {
   const [idx, setIdx] = useState(0)
   const n = urls.length
   const sig = urls.join('\n')
@@ -34,7 +36,11 @@ function ProdCardGallery({ urls }) {
     setIdx((i) => (i + 1) % n)
   }, [n])
 
-  if (!n) return <div className="bmzProdIcon">BMZ</div>
+  if (!n) {
+    return (
+      <div className={equipmentLayout ? 'bmzProdIcon bmzProdIcon--equipment' : 'bmzProdIcon'}>BMZ</div>
+    )
+  }
 
   return (
     <div className="bmzProdImgGallery">
@@ -102,6 +108,7 @@ export default function CatalogSubcategory() {
 
   const products = data?.products || []
   const category = data?.category
+  const equipmentCatalog = category?.slug === EQUIPMENT_CATEGORY_SLUG
 
   const breadcrumbItems = useMemo(
     () => [
@@ -155,7 +162,11 @@ export default function CatalogSubcategory() {
         </div>
       </section>
 
-      <main className="bmzPageContent bmzCatalogPage">
+      <main
+        className={['bmzPageContent', 'bmzCatalogPage', equipmentCatalog ? 'bmzCatalogPage--equipment' : '']
+          .join(' ')
+          .trim()}
+      >
         <div className="bmz-container">
           <button type="button" className="bmzBackBtn" onClick={() => navigate(`/products/c/${catSlug}`)}>
             ← Все подкатегории
@@ -192,7 +203,7 @@ export default function CatalogSubcategory() {
                       ac === 'heavy' ? 'bmzProdImg--heavy' : '',
                     ].join(' ')}
                   >
-                    <ProdCardGallery urls={imgUrls} />
+                    <ProdCardGallery urls={imgUrls} equipmentLayout={equipmentCatalog} />
                   </div>
                   <div className="bmzProdCardBody bmzProdCardBody--uniform">
                     <div className="bmzProdCardGrow">
