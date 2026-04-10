@@ -8,7 +8,9 @@ export function useHomeContent() {
 
   useEffect(() => {
     let cancelled = false
-    fetch(`${API_BASE_URL}/api/catalog/home-content`)
+    fetch(`${API_BASE_URL}/api/catalog/home-content`, {
+      cache: 'no-store',
+    })
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (!cancelled && d && typeof d === 'object') setContent(d)

@@ -52,27 +52,10 @@ const fallbackCategoryCards = [
     desc: 'Для логистики, складов и предприятий: стандартные и усиленные решения.',
     pills: [
       ['Стандартные', 'blue'],
-      ['Промышленные / сельхоз', 'blue'],
+      ['Промышленные / агро', 'blue'],
       ['Усиленные (карьеры)', 'orange'],
     ],
-    btn: 'Открыть',
-  },
-  {
-    key: 'equipment',
-    slug: 'oborudovanie',
-    tone: 'green',
-    icon: 'ОБ',
-    badge: 'комплект',
-    image: '/images/oborudovanie.png',
-    title: 'Оборудование',
-    desc: 'Тензодатчики, индикаторы и компоненты для разных условий эксплуатации.',
-    pills: [
-      ['Тензодатчики', 'blue'],
-      ['Индикаторы', 'blue'],
-      ['Крановые и платформенные весы', 'blue'],
-      ['Весы для животных', 'blue'],
-    ],
-    btn: 'Узнать цену',
+    btn: 'Каталог',
   },
   {
     key: 'rail',
@@ -87,7 +70,7 @@ const fallbackCategoryCards = [
       ['Вагонные платформы', 'blue'],
       ['Нагрузка до 150 т', 'blue'],
     ],
-    btn: 'Открыть',
+    btn: 'Узнать цену',
   },
   {
     key: 'foundation',
@@ -121,6 +104,23 @@ const fallbackCategoryCards = [
       ['Синхронизация с 1С', 'blue'],
     ],
     btn: 'Узнать цену',
+  },
+  {
+    key: 'equipment',
+    slug: 'oborudovanie',
+    tone: 'green',
+    icon: 'ОБ',
+    badge: 'комплект',
+    image: '/images/oborudovanie.png',
+    title: 'Оборудование',
+    desc: 'Тензодатчики, индикаторы и компоненты для разных условий эксплуатации.',
+    pills: [
+      ['Тензодатчики', 'blue'],
+      ['Индикаторы', 'blue'],
+      ['Крановые и платформенные весы', 'blue'],
+      ['Весы для животных', 'blue'],
+    ],
+    btn: 'Каталог',
   },
   {
     key: 'services',
@@ -165,7 +165,7 @@ export default function HomePage({ homeEditMode = false }) {
   })
   const [formStatus, setFormStatus] = useState('idle')
   const [categoryCards, setCategoryCards] = useState(fallbackCategoryCards)
-  const [reqModal, setReqModal] = useState({ open: false, type: '' })
+  const [reqModal, setReqModal] = useState({ open: false, type: '', slug: '' })
 
   useEffect(() => {
     if (!homeEditMode) return
@@ -355,8 +355,6 @@ export default function HomePage({ homeEditMode = false }) {
                       style={{ backgroundImage: `url(${c.image})` }}
                     >
                       <div className="bmzCatOverlay" />
-                      <div className="bmzCatIcon">{c.icon}</div>
-                      <div className="bmzCatBadge">{c.badge}</div>
                     </div>
                     <div className="bmzCatBody bmzCatBody--uniformHome">
                       <div className={['bmzCatTitle', c.tone === 'green' ? 'bmzCatTitle--green' : '', c.tone === 'orange' ? 'bmzCatTitle--orange' : ''].join(' ')}>
@@ -382,8 +380,8 @@ export default function HomePage({ homeEditMode = false }) {
                           <Link
                             to={c.slug ? `/products/c/${c.slug}` : '/products'}
                             className={[
-                              'bmzCatBtn',
-                              c.tone === 'green' ? 'bmzCatBtn--green' : c.tone === 'orange' ? 'bmzCatBtn--orange' : 'bmzCatBtn--blue',
+                              'bmzCatBtn bmzCatBtn--outline',
+                              c.tone === 'green' ? 'bmzCatBtn--outlineGreen' : c.tone === 'orange' ? 'bmzCatBtn--outlineOrange' : 'bmzCatBtn--outlineBlue',
                             ].join(' ')}
                             onClick={(e) => e.stopPropagation()}
                           >
@@ -399,7 +397,7 @@ export default function HomePage({ homeEditMode = false }) {
                             onClick={(e) => {
                               e.stopPropagation()
                               e.preventDefault()
-                              setReqModal({ open: true, type: c.title })
+                              setReqModal({ open: true, type: c.title, slug: c.slug })
                             }}
                           >
                             Узнать цену
@@ -755,8 +753,9 @@ export default function HomePage({ homeEditMode = false }) {
 
       <CatalogRequestModal
         open={reqModal.open}
-        onClose={() => setReqModal({ open: false, type: '' })}
+        onClose={() => setReqModal({ open: false, type: '', slug: '' })}
         defaultType={reqModal.type}
+        categorySlug={reqModal.slug}
       />
     </>
   )

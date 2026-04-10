@@ -31,10 +31,13 @@
 }
 
 .bmzTopNavInner {
-  min-height: 64px;
+  min-height: clamp(56px, 4vw + 44px, 64px);
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: clamp(6px, 0.9vw + 4px, 18px);
+  min-width: 0;
+  box-sizing: border-box;
+  padding-inline: clamp(8px, 1.2vw + 4px, 24px);
 }
 
 .bmzTopNavInner--centered {
@@ -55,11 +58,13 @@
   font-family: Unbounded, Inter, sans-serif;
   font-weight: 800;
   letter-spacing: 0.2px;
-  font-size: clamp(10px, 2vw, 16px);
+  font-size: clamp(11px, 0.35vw + 0.65rem, 16px);
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  padding-left: clamp(10px, 2.2vw, 30px);
+  padding-left: 0;
+  flex: 0 1 auto;
+  min-width: 0;
 }
 
 .bmzLogoMark {
@@ -77,9 +82,10 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 8px;
-  flex: 1;
+  gap: clamp(3px, 0.45vw + 2px, 10px);
+  flex: 1 1 auto;
   flex-wrap: nowrap;
+  min-width: 0;
 }
 
 .bmzNavLinkBtn,
@@ -88,8 +94,8 @@ a.bmzNavLinkBtn {
   border: 0;
   background: rgba(255, 255, 255, 0.08);
   color: rgba(255, 255, 255, 0.82);
-  font-size: clamp(8px, 0.8vw, 24px);
-  padding: 6px 12px;
+  font-size: clamp(10.5px, 0.42vw + 0.52rem, 14px);
+  padding: clamp(4px, 0.2vw + 3px, 8px) clamp(5px, 0.35vw + 4px, 12px);
   border-radius: 6px;
   transition: transform 0.15s, background 0.15s, color 0.15s;
   white-space: nowrap;
@@ -98,6 +104,9 @@ a.bmzNavLinkBtn {
   cursor: pointer;
   font: inherit;
   text-align: center;
+  flex: 0 1 auto;
+  min-width: 0;
+  line-height: 1.2;
 }
 
 .bmzNavLinkBtn:hover,
@@ -113,17 +122,46 @@ a.bmzNavLinkBtn:hover {
   background: #FFA726;
   color: #0D3D6E;
   font-weight: 700;
-  font-size: clamp(8px, 1vw, 24px);
-  padding: 8px 16px;
+  font-size: clamp(11px, 0.38vw + 0.55rem, 15px);
+  padding: clamp(5px, 0.25vw + 4px, 9px) clamp(8px, 0.5vw + 6px, 16px);
   border-radius: 6px;
   transition: transform 0.15s, filter 0.15s;
   white-space: nowrap;
-  margin-right: clamp(10px, 2.2vw, 30px);
+  margin-right: 0;
+  flex: 0 0 auto;
+  line-height: 1.2;
 }
 
 .bmzNavCTA:hover {
   transform: translateY(-1px);
   filter: brightness(0.98);
+}
+
+/* Планшет / узкий ноутбук: чуть плотнее, без вылезания CTA и обрезания ссылок */
+@media (max-width: 1100px) and (min-width: 721px) {
+  .bmzTopNavInner {
+    gap: clamp(4px, 0.6vw, 12px);
+    padding-inline: clamp(6px, 1vw + 2px, 16px);
+  }
+
+  .bmzNavLinks {
+    gap: clamp(2px, 0.35vw + 1px, 8px);
+  }
+
+  .bmzNavLinkBtn,
+  a.bmzNavLinkBtn {
+    font-size: clamp(10px, 0.38vw + 0.48rem, 13px);
+    padding: 4px clamp(4px, 0.28vw + 3px, 10px);
+  }
+
+  .bmzNavCTA {
+    font-size: clamp(10.5px, 0.32vw + 0.48rem, 14px);
+    padding: 5px clamp(7px, 0.45vw + 4px, 14px);
+  }
+
+  .bmzLogoBtn {
+    font-size: clamp(10.5px, 0.3vw + 0.58rem, 14px);
+  }
 }
 
 .bmzMobileToggle {
@@ -1277,7 +1315,6 @@ a.bmzMobileLinkBtn:hover {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 16px;
 }
 
 .bmzSectionLabel {
@@ -2810,15 +2847,28 @@ a.bmzMobileLinkBtn:hover {
 .bmzReqInput:focus { outline: none !important; border-color: var(--blue) !important; background: #fff !important; }
 .bmzReqModalPreview { background: #f1f5f9; border-radius: 10px; padding: 12px 14px; }
 .bmzReqModalPreviewLabel { font-size: 11px; font-weight: 700; color: var(--gray); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; }
-.bmzReqModalPreviewText { font-size: 13px; font-family: inherit; color: var(--dark); white-space: pre-wrap; margin: 0; line-height: 1.6; }
+.bmzReqModalPreviewText { font-size: 13px; font-family: inherit; color: var(--dark); white-space: pre-wrap; margin: 0; line-height: 1.6; max-height: min(28vh, 200px); overflow: auto; }
+.bmzReqModalHint { margin: 0; font-size: 13px; line-height: 1.45; }
 .bmzReqModalFooter { display: flex; gap: 10px; margin-top: 8px; }
-.bmzReqModalFooter .bmzBackBtn,
-.bmzReqModalFooter .bmzBtnPrimary,
-.bmzReqModalFooter .bmzWaBtn {
-  flex: 1 1 0 !important;
-  min-width: 0 !important;
+.bmzReqModalFooter--wa {
+  display: grid;
+  grid-template-columns: minmax(96px, 1fr) minmax(0, 1.55fr);
+  gap: 10px;
+  align-items: stretch;
+  margin-top: 12px;
+}
+.bmzReqModalFooter--wa .bmzReqModalBtnCancel,
+.bmzReqModalFooter--wa .bmzReqModalBtnWa {
+  flex: unset !important;
   width: 100%;
+  min-height: 48px;
   box-sizing: border-box;
+}
+.bmzReqModalBtnWa { justify-content: center; }
+@media (max-width: 420px) {
+  .bmzReqModalFooter--wa {
+    grid-template-columns: 1fr;
+  }
 }
 
 .bmzReqSteps { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; font-size: 12px; font-weight: 700; }
@@ -2826,9 +2876,40 @@ a.bmzMobileLinkBtn:hover {
 .bmzReqStep--active { color: var(--blue); }
 .bmzReqStepDivider { color: rgba(13,61,110,0.25); }
 
+.bmzReqCustomHeadline {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--dark);
+  margin: 0 0 10px;
+  line-height: 1.35;
+}
+.bmzReqChoiceList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.bmzReqChoice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(13,61,110,0.12);
+  background: #f8fafc;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.bmzReqChoice:hover { border-color: rgba(13,61,110,0.28); background: #fff; }
+.bmzReqChoice--on { border-color: var(--blue); background: rgba(13,61,110,0.06); }
+.bmzReqChoice input[type="radio"] { margin-top: 3px; accent-color: var(--blue); cursor: pointer; flex-shrink: 0; }
+.bmzReqChoiceText { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.bmzReqChoiceTitle { font-size: 14px; font-weight: 700; color: var(--dark); line-height: 1.35; }
+.bmzReqChoiceSub { font-size: 12px; color: var(--gray); line-height: 1.35; }
+.bmzReqModalFooter .bmzWaBtn:disabled { opacity: 0.45; cursor: not-allowed; filter: none; }
+
 /* ===================== WHATSAPP BUTTON ===================== */
 .bmzWaBtn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 0; background: #25d366; color: #fff; font-weight: 900; font-size: 14px; padding: 13px 16px; border-radius: 14px; cursor: pointer; transition: filter .15s; white-space: nowrap; }
-.bmzWaBtn:hover { filter: brightness(1.06); }
+.bmzWaBtn:hover:not(:disabled) { filter: brightness(1.06); }
 
 /* ===================== CARD BUTTONS ROW ===================== */
 .bmzCatBtnRow { display: flex; gap: 8px; flex-wrap: wrap; }

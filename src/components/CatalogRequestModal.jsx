@@ -9,13 +9,65 @@ const WEIGHT_TYPES = [
   'Сервис и ремонт',
 ]
 
-function buildWaMessage({ type, capacity, platform, purpose, phone }) {
+/** Кастомный сценарий для карточек главной (slug категории) */
+const HOME_CATEGORY_FLOW = {
+  'zheleznodorozhnye-vesy': {
+    headline: 'Выберите режим взвешивания вагонов:',
+    waKey: 'Режим взвешивания',
+    options: [
+      { title: 'Статическое взвешивание (Статика)' },
+      { title: 'Динамическое взвешивание (Динамика)' },
+      { title: 'Нужна консультация специалиста' },
+    ],
+  },
+  avtomatizatsiya: {
+    headline: 'Выберите вариант автоматизации:',
+    waKey: 'Вариант автоматизации',
+    options: [
+      { title: 'Базовая автоматизация', subtitle: 'ПО + Компьютер + Принтер, ИБП' },
+      { title: 'Автоматизация с фотофиксацией', subtitle: 'ПО + Компьютер + Камеры' },
+      { title: 'Полная цифровая интеграция', subtitle: 'ПО + Камеры + 1С + Отчеты в Telegram' },
+      { title: 'Нужна консультация специалиста' },
+    ],
+  },
+  uslugi: {
+    headline: 'Какие услуги вам необходимы?',
+    waKey: 'Услуга',
+    options: [
+      { title: 'Монтаж и ввод в эксплуатацию (ПНР)' },
+      { title: 'Сервис, калибровка и госповерка' },
+      { title: 'Модернизация механических весов' },
+      { title: 'Ремонт и техническая поддержка' },
+      { title: 'Нужна консультация специалиста' },
+    ],
+  },
+  fundament: {
+    headline: 'Вид фундамента?',
+    waKey: 'Вид фундамента',
+    options: [
+      { title: 'Эстакадный (на тумбах)' },
+      { title: 'Эстакадный (Монолит)' },
+      { title: 'Врезной (в уровень с землёй)' },
+      { title: 'Нужна консультация' },
+    ],
+  },
+}
+
+function optionToValue(opt) {
+  if (typeof opt === 'string') return opt
+  if (opt.subtitle) return `${opt.title} — ${opt.subtitle}`
+  return opt.title
+}
+
+function buildWaMessage({ type, capacity, platform, purpose, customWaKey, customSelection }) {
   const lines = ['Здравствуйте! Хочу получить расчёт стоимости.']
   if (type) lines.push(`Позиция: ${type}`)
+  if (customSelection && customWaKey) {
+    lines.push(`${customWaKey}: ${customSelection}`)
+  }
   if (capacity) lines.push(`Грузоподъёмность: ${capacity}`)
   if (platform) lines.push(`Платформа: ${platform}`)
   if (purpose) lines.push(`Назначение: ${purpose}`)
-  if (phone) lines.push(`Контакт: ${phone}`)
   return lines.join('\n')
 }
 
@@ -27,29 +79,27 @@ function WaIcon() {
   )
 }
 
-export default function CatalogRequestModal({ open, onClose, defaultType }) {
+export default function CatalogRequestModal({ open, onClose, defaultType, categorySlug = '' }) {
   const { digits } = useWhatsappDigits()
-  const [step, setStep] = useState(1)
   const [form, setForm] = useState({
     type: '',
     capacity: '',
     platform: '',
     purpose: '',
-    phone: '',
+    customSelection: '',
   })
 
+  const homeFlow = categorySlug ? HOME_CATEGORY_FLOW[categorySlug] : null
+
   useEffect(() => {
-    if (!open) {
-      setTimeout(() => setStep(1), 300)
-      return
-    }
+    if (!open) return
     setForm((f) => ({
       ...f,
       type: defaultType || WEIGHT_TYPES[0],
       capacity: '',
       platform: '',
       purpose: '',
-      phone: '',
+      customSelection: '',
     }))
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
@@ -64,9 +114,16 @@ export default function CatalogRequestModal({ open, onClose, defaultType }) {
   if (!open) return null
 
   const isSelectableType = WEIGHT_TYPES.includes(form.type)
-  const previewText = buildWaMessage(form)
+  const previewText = buildWaMessage({
+    ...form,
+    customWaKey: homeFlow?.waKey,
+    customSelection: form.customSelection,
+  })
+
+  const canSend = homeFlow ? Boolean(form.customSelection) : true
 
   function handleSend() {
+    if (!canSend) return
     const waDigits = digits || ''
     if (!waDigits) {
       alert('Номер WhatsApp не настроен. Укажите VITE_WHATSAPP_E164 в BMZ/.env')
@@ -88,116 +145,128 @@ export default function CatalogRequestModal({ open, onClose, defaultType }) {
       >
         <div className="bmzKpModalHead">
           <h2 id="bmz-req-title" className="bmzKpModalTitle">
-            {step === 1 ? '📋 Запрос цены' : '📞 Контакт и отправка'}
+            📋 Запрос цены
           </h2>
           <button type="button" className="bmzKpModalClose" onClick={onClose} aria-label="Закрыть">×</button>
         </div>
 
-        <div className="bmzReqSteps">
-          <div className={`bmzReqStep ${step >= 1 ? 'bmzReqStep--active' : ''}`}>1. Параметры</div>
-          <div className="bmzReqStepDivider">→</div>
-          <div className={`bmzReqStep ${step >= 2 ? 'bmzReqStep--active' : ''}`}>2. Отправка</div>
+        <div className="bmzReqModalBody">
+          {homeFlow ? (
+            <>
+              <p className="bmzGrayText bmzReqModalHint">
+                Выберите вариант и нажмите «Написать в WhatsApp» — откроется чат с готовым текстом.
+              </p>
+              <p className="bmzReqCustomHeadline">{homeFlow.headline}</p>
+              <div className="bmzReqChoiceList" role="radiogroup" aria-label={homeFlow.headline}>
+                {homeFlow.options.map((opt, i) => {
+                  const val = optionToValue(opt)
+                  const id = `home-req-opt-${categorySlug}-${i}`
+                  return (
+                    <label
+                      key={val}
+                      htmlFor={id}
+                      className={['bmzReqChoice', form.customSelection === val ? 'bmzReqChoice--on' : ''].join(' ')}
+                    >
+                      <input
+                        id={id}
+                        type="radio"
+                        name="home-req-custom"
+                        value={val}
+                        checked={form.customSelection === val}
+                        onChange={() => setForm((f) => ({ ...f, customSelection: val }))}
+                      />
+                      <div className="bmzReqChoiceText">
+                        <span className="bmzReqChoiceTitle">{typeof opt === 'string' ? opt : opt.title}</span>
+                        {opt && typeof opt === 'object' && opt.subtitle ? (
+                          <span className="bmzReqChoiceSub">{opt.subtitle}</span>
+                        ) : null}
+                      </div>
+                    </label>
+                  )
+                })}
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="bmzGrayText bmzReqModalHint">
+                Укажите параметры и откройте WhatsApp — текст подставится автоматически.
+              </p>
+
+              <div className="bmzReqField">
+                <label className="bmzFieldLabel">Тип весов / услуги</label>
+                {isSelectableType ? (
+                  <select
+                    className="bmzSelect bmzReqInput"
+                    value={form.type}
+                    onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))}
+                  >
+                    {WEIGHT_TYPES.map((t) => <option key={t}>{t}</option>)}
+                  </select>
+                ) : (
+                  <input
+                    className="bmzInput bmzReqInput"
+                    value={form.type}
+                    onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))}
+                  />
+                )}
+              </div>
+
+              {form.type === 'Железнодорожные весы' ? (
+                <div className="bmzReqField">
+                  <label className="bmzFieldLabel">Грузоподъёмность</label>
+                  <input
+                    className="bmzInput bmzReqInput"
+                    placeholder="Например: 60 т, 80 т, 120 т"
+                    value={form.capacity}
+                    onChange={(e) => setForm((f) => ({ ...f, capacity: e.target.value }))}
+                  />
+                </div>
+              ) : null}
+
+              {form.type !== 'Автоматизация' ? (
+                <div className="bmzReqField">
+                  <label className="bmzFieldLabel">Размер платформы</label>
+                  <input
+                    className="bmzInput bmzReqInput"
+                    placeholder="Например: 18×3 м"
+                    value={form.platform}
+                    onChange={(e) => setForm((f) => ({ ...f, platform: e.target.value }))}
+                  />
+                </div>
+              ) : null}
+
+              <div className="bmzReqField">
+                <label className="bmzFieldLabel">Назначение / объект</label>
+                <input
+                  className="bmzInput bmzReqInput"
+                  placeholder="Карьер, склад, элеватор, завод..."
+                  value={form.purpose}
+                  onChange={(e) => setForm((f) => ({ ...f, purpose: e.target.value }))}
+                />
+              </div>
+            </>
+          )}
+
+          <div className="bmzReqModalPreview">
+            <div className="bmzReqModalPreviewLabel">Текст для WhatsApp</div>
+            <pre className="bmzReqModalPreviewText">{previewText}</pre>
+          </div>
+
+          <div className="bmzReqModalFooter bmzReqModalFooter--wa">
+            <button type="button" className="bmzBackBtn bmzReqModalBtnCancel" onClick={onClose}>
+              Отмена
+            </button>
+            <button
+              type="button"
+              className="bmzWaBtn bmzReqModalBtnWa"
+              disabled={!canSend}
+              onClick={handleSend}
+            >
+              <WaIcon />
+              Написать в WhatsApp
+            </button>
+          </div>
         </div>
-
-        {step === 1 && (
-          <div className="bmzReqModalBody">
-            <p className="bmzGrayText" style={{ marginBottom: 8, fontSize: 13 }}>
-              Укажите параметры — в WhatsApp будет готовый текст, просто нажмите «Отправить».
-            </p>
-
-            <div className="bmzReqField">
-              <label className="bmzFieldLabel">Тип весов / услуги</label>
-              {isSelectableType ? (
-                <select
-                  className="bmzSelect bmzReqInput"
-                  value={form.type}
-                  onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))}
-                >
-                  {WEIGHT_TYPES.map((t) => <option key={t}>{t}</option>)}
-                </select>
-              ) : (
-                <input
-                  className="bmzInput bmzReqInput"
-                  value={form.type}
-                  onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))}
-                />
-              )}
-            </div>
-
-            {form.type === 'Железнодорожные весы' ? (
-              <div className="bmzReqField">
-                <label className="bmzFieldLabel">Грузоподъёмность</label>
-                <input
-                  className="bmzInput bmzReqInput"
-                  placeholder="Например: 60 т, 80 т, 120 т"
-                  value={form.capacity}
-                  onChange={(e) => setForm((f) => ({ ...f, capacity: e.target.value }))}
-                />
-              </div>
-            ) : null}
-
-            {form.type !== 'Автоматизация' ? (
-              <div className="bmzReqField">
-                <label className="bmzFieldLabel">Размер платформы</label>
-                <input
-                  className="bmzInput bmzReqInput"
-                  placeholder="Например: 18×3 м"
-                  value={form.platform}
-                  onChange={(e) => setForm((f) => ({ ...f, platform: e.target.value }))}
-                />
-              </div>
-            ) : null}
-
-            <div className="bmzReqField">
-              <label className="bmzFieldLabel">Назначение / объект</label>
-              <input
-                className="bmzInput bmzReqInput"
-                placeholder="Карьер, склад, элеватор, завод..."
-                value={form.purpose}
-                onChange={(e) => setForm((f) => ({ ...f, purpose: e.target.value }))}
-              />
-            </div>
-
-            <div className="bmzReqModalFooter">
-              <button type="button" className="bmzBackBtn" style={{ flex: 1 }} onClick={onClose}>
-                Отмена
-              </button>
-              <button type="button" className="bmzBtnPrimary" style={{ flex: 1 }} onClick={() => setStep(2)}>
-                Далее →
-              </button>
-            </div>
-          </div>
-        )}
-
-        {step === 2 && (
-          <div className="bmzReqModalBody">
-            <div className="bmzReqField">
-              <label className="bmzFieldLabel">Ваш телефон (необязательно)</label>
-              <input
-                className="bmzInput bmzReqInput"
-                placeholder="+7 (700) 000-00-00"
-                value={form.phone}
-                onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-                autoFocus
-              />
-            </div>
-
-            <div className="bmzReqModalPreview">
-              <div className="bmzReqModalPreviewLabel">Будет отправлено в WhatsApp:</div>
-              <pre className="bmzReqModalPreviewText">{previewText}</pre>
-            </div>
-
-            <div className="bmzReqModalFooter">
-              <button type="button" className="bmzBackBtn" style={{ flex: 1 }} onClick={() => setStep(1)}>
-                ← Назад
-              </button>
-              <button type="button" className="bmzWaBtn" style={{ flex: 1 }} onClick={handleSend}>
-                <WaIcon />
-                Написать в WhatsApp
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   )
