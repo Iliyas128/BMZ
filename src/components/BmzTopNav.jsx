@@ -97,7 +97,8 @@ export default function BmzTopNav({
                       className="bmzMobileLinkBtn"
                       onClick={() => {
                         setOpen(false)
-                        l.onClick?.()
+                        const fn = l.onClick
+                        if (fn) window.setTimeout(() => fn(), 120)
                       }}
                     >
                       {l.label}
@@ -109,7 +110,8 @@ export default function BmzTopNav({
                       className="bmzMobileLinkBtn"
                       onClick={() => {
                         setOpen(false)
-                        l.onClick?.()
+                        const fn = l.onClick
+                        if (fn) window.setTimeout(() => fn(), 120)
                       }}
                     >
                       {l.label}

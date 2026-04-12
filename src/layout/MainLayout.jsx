@@ -19,37 +19,37 @@ export default function MainLayout() {
         key: 'products',
         label: 'Автовесы',
         onClick: () =>
-          isHome ? scrollToId('home-categories') : navigate('/', { state: { scrollTo: 'home-categories' } }),
+          isHome ? scrollToId('home-cat-car') : navigate('/', { state: { scrollTo: 'home-cat-car' } }),
       },
       {
         key: 'equipment',
         label: 'Оборудование',
         onClick: () =>
-          isHome ? scrollToId('home-categories') : navigate('/', { state: { scrollTo: 'home-categories' } }),
+          isHome ? scrollToId('home-cat-equipment') : navigate('/', { state: { scrollTo: 'home-cat-equipment' } }),
       },
       {
         key: 'railway',
         label: 'Железнодорожные весы',
         onClick: () =>
-          isHome ? scrollToId('home-categories') : navigate('/', { state: { scrollTo: 'home-categories' } }),
+          isHome ? scrollToId('home-cat-rail') : navigate('/', { state: { scrollTo: 'home-cat-rail' } }),
       },
       {
         key: 'foundation',
         label: 'Фундамент',
         onClick: () =>
-          isHome ? scrollToId('home-categories') : navigate('/', { state: { scrollTo: 'home-categories' } }),
+          isHome ? scrollToId('home-cat-foundation') : navigate('/', { state: { scrollTo: 'home-cat-foundation' } }),
       },
       {
         key: 'automation',
         label: 'Автоматизация',
         onClick: () =>
-          isHome ? scrollToId('home-categories') : navigate('/', { state: { scrollTo: 'home-categories' } }),
+          isHome ? scrollToId('home-cat-automation') : navigate('/', { state: { scrollTo: 'home-cat-automation' } }),
       },
       {
         key: 'services',
         label: 'Услуги',
         onClick: () =>
-          isHome ? scrollToId('home-categories') : navigate('/', { state: { scrollTo: 'home-categories' } }),
+          isHome ? scrollToId('home-cat-services') : navigate('/', { state: { scrollTo: 'home-cat-services' } }),
       },
       {
         key: 'about',

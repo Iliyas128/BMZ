@@ -232,7 +232,7 @@ export default function HomePage({ homeEditMode = false }) {
     const id = window.setTimeout(() => {
       scrollToId(target)
       navigate(location.pathname, { replace: true, state: {} })
-    }, 0)
+    }, 80)
     return () => clearTimeout(id)
   }, [location.state?.scrollTo, location.pathname, navigate])
 
@@ -409,13 +409,13 @@ export default function HomePage({ homeEditMode = false }) {
                 )
                 if (homeEditMode) {
                   return (
-                    <div key={c.key} className="bmzCatCard" role="group" aria-label={c.title}>
+                    <div key={c.key} id={`home-cat-${c.key}`} className="bmzCatCard" role="group" aria-label={c.title}>
                       {cardInner}
                     </div>
                   )
                 }
                 return (
-                  <div key={c.key} className="bmzCatCard bmzCatCard--link" role="group" aria-label={c.title}>
+                  <div key={c.key} id={`home-cat-${c.key}`} className="bmzCatCard bmzCatCard--link" role="group" aria-label={c.title}>
                     {cardInner}
                   </div>
                 )
@@ -705,7 +705,7 @@ export default function HomePage({ homeEditMode = false }) {
                 <div className="bmzFooterColTitle">Продукция</div>
                 <div className="bmzFooterColLinks">
                   <Link to="/products/c/avtomobilnye-vesy" className="bmzFooterLink">Автомобильные весы</Link>
-                  <Link to="/products/c/zheleznodorozhnye-vesy" className="bmzFooterLink">Железнодорожные весы</Link>
+                  <Link to="/products/c/oborudovanie" className="bmzFooterLink">Оборудование</Link>
                 </div>
               </div>
 
