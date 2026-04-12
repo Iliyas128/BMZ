@@ -121,8 +121,10 @@ export default function CatalogCategory() {
                           tone === 'green' ? 'bmzCatTop--green' : '',
                           tone === 'orange' ? 'bmzCatTop--orange' : '',
                         ].join(' ')}
-                        style={s.image ? { backgroundImage: `url(${s.image})` } : undefined}
                       >
+                        {s.image ? (
+                          <img src={s.image} alt="" className="bmzCatTopImg" loading="lazy" decoding="async" />
+                        ) : null}
                         {s.image ? <div className="bmzCatOverlay" /> : null}
                         <div className="bmzCatIcon">{String(s.name || '').slice(0, 2).toUpperCase()}</div>
                         <div className="bmzCatBadge">линейка</div>

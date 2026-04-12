@@ -8,6 +8,7 @@ import { HomeEditProvider } from '../context/HomeEditContext'
 import { useToast } from '../context/ToastContext'
 import { HOME_DEFAULTS } from '../data/homeDefaults'
 import { useHomeContent } from '../hooks/useHomeContent'
+import BmzSpinner from '../components/BmzSpinner'
 import CatalogRequestModal from '../components/CatalogRequestModal'
 import { sortCategoriesFixed } from '../utils/catalogCategoryOrder'
 
@@ -152,7 +153,7 @@ export default function HomePage({ homeEditMode = false }) {
   const navigate = useNavigate()
   const location = useLocation()
   const { digits: waDigits } = useWhatsappDigits()
-  const { content: publicContent } = useHomeContent()
+  const { content: publicContent, loading: homeContentLoading } = useHomeContent()
   const { pushToast } = useToast()
 
   const [editDraft, setEditDraft] = useState(null)
@@ -229,12 +230,13 @@ export default function HomePage({ homeEditMode = false }) {
   useEffect(() => {
     const target = location.state?.scrollTo
     if (!target) return
+    if (!homeEditMode && homeContentLoading) return
     const id = window.setTimeout(() => {
       scrollToId(target)
       navigate(location.pathname, { replace: true, state: {} })
     }, 80)
     return () => clearTimeout(id)
-  }, [location.state?.scrollTo, location.pathname, navigate])
+  }, [location.state?.scrollTo, location.pathname, navigate, homeEditMode, homeContentLoading])
 
   useEffect(() => {
     let isMounted = true
@@ -262,6 +264,14 @@ export default function HomePage({ homeEditMode = false }) {
     loadCategories()
     return () => { isMounted = false }
   }, [])
+
+  if (!homeEditMode && homeContentLoading) {
+    return (
+      <div className="bmz-container bmzHomeLoadingShell">
+        <BmzSpinner label="Загрузка главной…" variant="page" />
+      </div>
+    )
+  }
 
   const pageBody = (
     <>
@@ -352,8 +362,10 @@ export default function HomePage({ homeEditMode = false }) {
                         c.tone === 'green' ? 'bmzCatTop--green' : '',
                         c.tone === 'orange' ? 'bmzCatTop--orange' : '',
                       ].join(' ')}
-                      style={{ backgroundImage: `url(${c.image})` }}
                     >
+                      {c.image ? (
+                        <img src={c.image} alt="" className="bmzCatTopImg" loading="lazy" decoding="async" />
+                      ) : null}
                       <div className="bmzCatOverlay" />
                     </div>
                     <div className="bmzCatBody bmzCatBody--uniformHome">

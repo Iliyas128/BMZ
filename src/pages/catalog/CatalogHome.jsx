@@ -82,8 +82,10 @@ export default function CatalogHome() {
                       tone === 'green' ? 'bmzCatTop--green' : '',
                       tone === 'orange' ? 'bmzCatTop--orange' : '',
                     ].join(' ')}
-                    style={c.image ? { backgroundImage: `url(${c.image})` } : undefined}
                   >
+                    {c.image ? (
+                      <img src={c.image} alt="" className="bmzCatTopImg" loading="lazy" decoding="async" />
+                    ) : null}
                     {c.image ? <div className="bmzCatOverlay" /> : null}
                     <div className="bmzCatIcon">{initials}</div>
                     <div className="bmzCatBadge">каталог</div>

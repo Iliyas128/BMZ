@@ -3,7 +3,7 @@ import { API_BASE_URL } from '../api/config'
 import { HOME_DEFAULTS } from '../data/homeDefaults'
 
 export function useHomeContent() {
-  const [content, setContent] = useState(HOME_DEFAULTS)
+  const [content, setContent] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -13,9 +13,12 @@ export function useHomeContent() {
     })
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
-        if (!cancelled && d && typeof d === 'object') setContent(d)
+        if (cancelled) return
+        setContent(d && typeof d === 'object' ? d : HOME_DEFAULTS)
       })
-      .catch(() => {})
+      .catch(() => {
+        if (!cancelled) setContent(HOME_DEFAULTS)
+      })
       .finally(() => {
         if (!cancelled) setLoading(false)
       })
