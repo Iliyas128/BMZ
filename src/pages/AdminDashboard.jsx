@@ -262,6 +262,8 @@ export default function AdminDashboard() {
     delete specs.cap
     delete specs.platform
     delete specs.sensors
+    delete specs.display
+    delete specs.class
 
     const body = {
       category: productForm.category,

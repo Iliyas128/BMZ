@@ -4,7 +4,8 @@
  */
 export function getSpecHighlightRows(specs) {
   if (!specs || typeof specs !== 'object') return []
-  if (Array.isArray(specs.highlights) && specs.highlights.length) {
+  // Пустой массив highlights — явное «нет строк в карточке» (после очистки в админке), без fallback на legacy-поля.
+  if (Array.isArray(specs.highlights)) {
     return specs.highlights
       .filter((x) => x && String(x.label || '').trim() && String(x.value ?? '').trim())
       .map((x) => ({ label: String(x.label).trim(), value: String(x.value ?? '').trim() }))
