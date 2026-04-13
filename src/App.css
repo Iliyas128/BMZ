@@ -3133,3 +3133,55 @@ a.bmzMobileLinkBtn:hover {
 .bmzFooterLink--wa::before { content: "💬 "; font-size: 11px; }
 .bmzFooterLink--wa:hover { color: #25d366; }
 
+/* ===================== FLOAT SOCIAL BUTTONS ===================== */
+.bmzFloatSocial {
+  position: fixed;
+  right: clamp(14px, 2.2vw, 24px);
+  bottom: clamp(14px, 2.2vw, 24px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 1200;
+}
+
+.bmzFloatSocialBtn {
+  width: 62px;
+  height: 62px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 900;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  box-shadow: 0 10px 24px rgba(13, 61, 110, 0.26);
+  transition: transform .15s ease, filter .15s ease;
+}
+
+.bmzFloatSocialBtn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.06);
+}
+
+.bmzFloatSocialIcon {
+  width: 54px;
+  height: 54px;
+  object-fit: contain;
+  display: block;
+}
+
+@media (max-width: 640px) {
+  .bmzFloatSocialBtn {
+    width: 48px;
+    height: 48px;
+    font-size: 12px;
+  }
+
+  .bmzFloatSocialIcon {
+    width: 22px;
+    height: 22px;
+  }
+}
+

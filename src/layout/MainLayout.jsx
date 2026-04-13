@@ -1,6 +1,8 @@
 import { useCallback, useMemo } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import BmzTopNav from '../components/BmzTopNav'
+import { buildWhatsAppKpUrl } from '../api/config'
+import { useWhatsappDigits } from '../hooks/useWhatsappDigits'
 
 const scrollToId = (id) => {
   const el = document.getElementById(id)
@@ -12,6 +14,12 @@ export default function MainLayout() {
   const navigate = useNavigate()
   const location = useLocation()
   const isHome = location.pathname === '/'
+  const { digits: waDigits } = useWhatsappDigits()
+  const instagramUrl = 'https://www.instagram.com/bmz.engineering/?utm_source=ig_web_button_share_sheet'
+  const whatsappUrl = useMemo(
+    () => buildWhatsAppKpUrl('Здравствуйте! Хочу получить консультацию по весам.', waDigits),
+    [waDigits],
+  )
 
   const navLinks = useMemo(
     () => [
@@ -75,6 +83,30 @@ export default function MainLayout() {
         onCta={handleCta}
       />
       <Outlet />
+      <div className="bmzFloatSocial" aria-label="Быстрые контакты">
+        <a
+          href={instagramUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="bmzFloatSocialBtn bmzFloatSocialBtn--instagram"
+          aria-label="Открыть Instagram"
+          title="Instagram"
+        >
+          <img src="/instagram.png" alt="" className="bmzFloatSocialIcon" loading="lazy" decoding="async" />
+        </a>
+        {whatsappUrl ? (
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bmzFloatSocialBtn bmzFloatSocialBtn--whatsapp"
+            aria-label="Написать в WhatsApp"
+            title="WhatsApp"
+          >
+            <img src="/whatsapp.png" alt="" className="bmzFloatSocialIcon" loading="lazy" decoding="async" />
+          </a>
+        ) : null}
+      </div>
     </div>
   )
 }
