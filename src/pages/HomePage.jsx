@@ -12,6 +12,26 @@ import BmzSpinner from '../components/BmzSpinner'
 import CatalogRequestModal from '../components/CatalogRequestModal'
 import { sortCategoriesFixed } from '../utils/catalogCategoryOrder'
 
+function lineWithMailtoLinks(line) {
+  const s = String(line)
+  const parts = []
+  let last = 0
+  let m
+  const re = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g
+  while ((m = re.exec(s)) !== null) {
+    if (m.index > last) parts.push(s.slice(last, m.index))
+    const addr = m[0]
+    parts.push(
+      <a key={`${m.index}-${addr}`} href={`mailto:${addr}`} className="bmzInlineMail">
+        {addr}
+      </a>,
+    )
+    last = m.index + addr.length
+  }
+  if (last < s.length) parts.push(s.slice(last))
+  return parts.length ? parts : s
+}
+
 function MultilineText({ text }) {
   if (!text) return null
   return (
@@ -21,7 +41,7 @@ function MultilineText({ text }) {
         .map((line, i) => (
           <span key={i}>
             {i > 0 ? <br /> : null}
-            {line}
+            {lineWithMailtoLinks(line)}
           </span>
         ))}
     </>

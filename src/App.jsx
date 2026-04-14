@@ -5,6 +5,7 @@ import MainLayout from './layout/MainLayout'
 import AdminLayout from './layout/AdminLayout'
 import RequireAuth from './components/RequireAuth'
 import BmzSpinner from './components/BmzSpinner'
+import SeoUpdater from './components/SeoUpdater'
 import HomePage from './pages/HomePage'
 import AdminLogin from './pages/AdminLogin'
 import './App.css'
@@ -19,6 +20,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <ToastProvider>
+        <SeoUpdater />
         <div className="bmzApp">
           <Routes>
             <Route element={<MainLayout />}>

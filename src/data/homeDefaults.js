@@ -167,7 +167,7 @@ const HOME_DEFAULTS = {
     col3Title: "Услуги",
     col3Text: "Монтаж и ПНР\nКалибровка и поверка\nМодернизация\nРемонт\nСервис",
     col4Title: "Контакты",
-    col4Text: "+7 (XXX) XXX-XX-XX\nemail@example.com\navtovesy.net",
+    col4Text: "+7 777 694 8444\ninfo@bmz-engineering.kz\navtovesy.net",
   },
 };
 

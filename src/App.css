@@ -1345,6 +1345,16 @@ a.bmzMobileLinkBtn:hover {
   line-height: 1.7;
 }
 
+.bmzInlineMail {
+  color: rgba(147, 197, 253, 0.95);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.bmzInlineMail:hover {
+  color: #fff;
+}
+
 .bmzFooterBottom {
   margin-top: 16px;
   padding-top: 14px;
@@ -3166,9 +3176,35 @@ a.bmzMobileLinkBtn:hover {
 }
 
 .bmzFloatSocialIcon {
+  width: 62px;
+  height: 62px;
+  object-fit: contain;
+  display: block;
+}
+
+.bmzFloatSocialBtn--phone {
+  background: linear-gradient(145deg, #0f9d58, #0a6b3c);
+  color: #fff;
+}
+
+.bmzFloatSocialBtn--whatsapp {
+  background: transparent;
+  box-shadow: none;
+}
+
+.bmzFloatSocialBtn--whatsapp:hover {
+  filter: drop-shadow(0 8px 18px rgba(37, 211, 102, 0.45));
+}
+
+.bmzFloatSocialIcon--svg {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.bmzFloatSocialIcon--waSvg {
   width: 54px;
   height: 54px;
-  object-fit: contain;
   display: block;
 }
 
@@ -3182,6 +3218,16 @@ a.bmzMobileLinkBtn:hover {
   .bmzFloatSocialIcon {
     width: 32px;
     height: 32px;
+  }
+
+  .bmzFloatSocialIcon--svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .bmzFloatSocialIcon--waSvg {
+    width: 34px;
+    height: 34px;
   }
 }
 
