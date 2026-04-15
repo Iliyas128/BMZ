@@ -843,6 +843,10 @@ a.bmzMobileLinkBtn:hover {
   scroll-margin-top: clamp(64px, 5vw + 48px, 88px);
 }
 
+#home-footer {
+  scroll-margin-top: clamp(64px, 5vw + 48px, 88px);
+}
+
 .bmzCatCard:hover {
   transform: translateY(-3px);
   border-color: rgba(21, 101, 192, 0.35);

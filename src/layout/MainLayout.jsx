@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import BmzTopNav from '../components/BmzTopNav'
 import { buildWhatsAppKpUrl } from '../api/config'
@@ -15,11 +15,23 @@ export default function MainLayout() {
   const location = useLocation()
   const isHome = location.pathname === '/'
   const { digits: waDigits } = useWhatsappDigits()
+  const [isCompactNav, setIsCompactNav] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches,
+  )
   const phoneTel = 'tel:+77776948444'
   const whatsappUrl = useMemo(
     () => buildWhatsAppKpUrl('Здравствуйте! Хочу получить консультацию по весам.', waDigits),
     [waDigits],
   )
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const media = window.matchMedia('(max-width: 768px)')
+    const handleChange = (e) => setIsCompactNav(e.matches)
+    setIsCompactNav(media.matches)
+    media.addEventListener('change', handleChange)
+    return () => media.removeEventListener('change', handleChange)
+  }, [])
 
   const navLinks = useMemo(
     () => [
@@ -37,7 +49,7 @@ export default function MainLayout() {
       },
       {
         key: 'railway',
-        label: 'Железнодорожные весы',
+        label: isCompactNav ? 'ЖД весы' : 'Железнодорожные весы',
         onClick: () =>
           isHome ? scrollToId('home-cat-rail') : navigate('/', { state: { scrollTo: 'home-cat-rail' } }),
       },
@@ -65,8 +77,14 @@ export default function MainLayout() {
         onClick: () =>
           isHome ? scrollToId('home-about') : navigate('/', { state: { scrollTo: 'home-about' } }),
       },
+      {
+        key: 'contacts',
+        label: 'Контакты',
+        onClick: () =>
+          isHome ? scrollToId('home-footer') : navigate('/', { state: { scrollTo: 'home-footer' } }),
+      },
     ],
-    [navigate, isHome],
+    [navigate, isHome, isCompactNav],
   )
 
   const handleCta = useCallback(() => {

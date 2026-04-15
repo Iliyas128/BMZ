@@ -719,7 +719,7 @@ export default function HomePage({ homeEditMode = false }) {
         </section>
 
         {/* FOOTER */}
-        <footer className="bmzFooter">
+        <footer id="home-footer" className="bmzFooter">
           <div className="bmzFooterInner">
             <div className="bmzFooterGrid">
               <div>
