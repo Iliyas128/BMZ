@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { apiFetch } from '../api/client'
 import { API_BASE_URL, buildWhatsAppKpUrl } from '../api/config'
 import { useWhatsappDigits } from '../hooks/useWhatsappDigits'
+import { openWhatsApp } from '../utils/analytics'
 import HomeHit from '../components/HomeEditHit'
 import { HomeEditProvider } from '../context/HomeEditContext'
 import { useToast } from '../context/ToastContext'
@@ -220,7 +221,7 @@ export default function HomePage({ homeEditMode = false }) {
   const openBottomWhatsApp = useCallback(() => {
     const text = 'Здравствуйте! Хочу получить консультацию по весам.'
     const url = buildWhatsAppKpUrl(text, waDigits)
-    if (url) window.open(url, '_blank', 'noopener,noreferrer')
+    if (url) openWhatsApp(url)
     else scrollToId('home-lead')
   }, [waDigits])
 
@@ -528,7 +529,7 @@ export default function HomePage({ homeEditMode = false }) {
                 const message = lines.join('\n')
                 const url = buildWhatsAppKpUrl(message, waDigits)
                 if (url) {
-                  window.open(url, '_blank', 'noopener,noreferrer')
+                  openWhatsApp(url)
                 } else {
                   setFormStatus('sent')
                 }
@@ -754,7 +755,17 @@ export default function HomePage({ homeEditMode = false }) {
                     const msg = `Здравствуйте! Интересует услуга: ${service}.`
                     const waUrl = buildWhatsAppKpUrl(msg, waDigits)
                     return waUrl ? (
-                      <a key={service} href={waUrl} target="_blank" rel="noopener noreferrer" className="bmzFooterLink bmzFooterLink--wa">
+                      <a
+                        key={service}
+                        href={waUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bmzFooterLink bmzFooterLink--wa"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          openWhatsApp(waUrl)
+                        }}
+                      >
                         {service}
                       </a>
                     ) : (

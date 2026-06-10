@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { buildWhatsAppKpUrl } from '../api/config'
 import { useWhatsappDigits } from '../hooks/useWhatsappDigits'
+import { openWhatsApp } from '../utils/analytics'
 import BmzSpinner from './BmzSpinner'
 import { getSpecHighlightRows } from '../utils/productSpecs'
 
@@ -88,7 +89,16 @@ export default function CatalogKpModal({ open, onClose, product, categoryName, s
         ) : null}
         {!ready ? <BmzSpinner label="Проверяем настройки…" variant="inline" /> : null}
         {ready && hasWa && waUrl ? (
-          <a href={waUrl} target="_blank" rel="noopener noreferrer" className="bmzKpModalWa">
+          <a
+            href={waUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bmzKpModalWa"
+            onClick={(e) => {
+              e.preventDefault()
+              openWhatsApp(waUrl)
+            }}
+          >
             Написать в WhatsApp
           </a>
         ) : null}

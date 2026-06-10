@@ -3,6 +3,7 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import BmzTopNav from '../components/BmzTopNav'
 import { buildWhatsAppKpUrl } from '../api/config'
 import { useWhatsappDigits } from '../hooks/useWhatsappDigits'
+import { openWhatsApp } from '../utils/analytics'
 
 const scrollToId = (id) => {
   const el = document.getElementById(id)
@@ -127,6 +128,10 @@ export default function MainLayout() {
             className="bmzFloatSocialBtn bmzFloatSocialBtn--whatsapp"
             aria-label="Написать в WhatsApp"
             title="WhatsApp"
+            onClick={(e) => {
+              e.preventDefault()
+              openWhatsApp(whatsappUrl)
+            }}
           >
             <svg
               className="bmzFloatSocialIcon bmzFloatSocialIcon--waSvg"

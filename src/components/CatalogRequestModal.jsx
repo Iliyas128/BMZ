@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { buildWhatsAppKpUrl } from '../api/config'
 import { useWhatsappDigits } from '../hooks/useWhatsappDigits'
+import { openWhatsApp } from '../utils/analytics'
 
 const WEIGHT_TYPES = [
   'Железнодорожные весы',
@@ -130,7 +131,7 @@ export default function CatalogRequestModal({ open, onClose, defaultType, catego
       return
     }
     const url = buildWhatsAppKpUrl(previewText, waDigits)
-    if (url) window.open(url, '_blank', 'noopener,noreferrer')
+    if (url) openWhatsApp(url)
     onClose()
   }
 
